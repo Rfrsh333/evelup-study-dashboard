@@ -18,6 +18,14 @@ import {
   type CsvMapping,
   type CsvRow,
 } from '@/integrations/brightspace/csvImport'
+import { extractTextFromPdf, parseProgressSummary, toAssessment } from '@/integrations/brightspace/pdfImport'
+
+type PdfRow = {
+  id: string
+  course: string | null
+  item: string
+  status: 'passed' | 'failed' | 'pending'
+}
 
 const ICS_URL_KEY = 'levelup-ics-url'
 const BLOCK_LABEL_KEY = 'levelup-block-label'
@@ -43,6 +51,11 @@ export function IntegrationsSection() {
   const [blockLabel, setBlockLabel] = useState<string>(
     () => localStorage.getItem(BLOCK_LABEL_KEY) ?? '25/26 Blok 3'
   )
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [pdfRows, setPdfRows] = useState<PdfRow[]>([])
+  const [pdfWarnings, setPdfWarnings] = useState<string[]>([])
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -209,6 +222,86 @@ export function IntegrationsSection() {
     setCsvStatus(t('integrations.csv.imported', { count: assessments.length }))
     addToast({ message: t('integrations.csv.imported', { count: assessments.length }) })
     setCsvStep('map')
+  }
+
+  const handlePdfAnalyse = async () => {
+    if (!pdfFile) return
+    setPdfError(null)
+    setPdfLoading(true)
+    setPdfWarnings([])
+    try {
+      const text = await extractTextFromPdf(pdfFile)
+      const result = parseProgressSummary(text)
+      setPdfWarnings(result.warnings)
+      const rows = result.rows.map((row) => ({
+        id: crypto.randomUUID(),
+        course: row.course,
+        item: row.item,
+        status: row.status,
+      }))
+      setPdfRows(rows)
+      if (rows.length === 0) {
+        setPdfError(t('integrations.pdf.empty'))
+      }
+    } catch (error) {
+      console.error('PDF parse error:', error)
+      setPdfError(t('integrations.pdf.parseError'))
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
+  const handlePdfSave = async () => {
+    if (pdfRows.length === 0) return
+    localStorage.setItem(BLOCK_LABEL_KEY, blockLabel)
+
+    const existing = new Set(
+      state.assessments
+        .filter((assessment) => assessment.blockId === blockLabel)
+        .map((assessment) => `${assessment.course}-${assessment.item}`)
+    )
+
+    const uniqueRows = pdfRows.filter(
+      (row) => !existing.has(`${row.course ?? 'Course'}-${row.item}`)
+    )
+
+    const assessments = uniqueRows.map((row) =>
+      toAssessment(
+        {
+          course: row.course,
+          item: row.item,
+          status: row.status,
+          assessed_at: null,
+          weight: null,
+          score: null,
+        },
+        blockLabel
+      )
+    )
+
+    assessments.forEach((assessment) => addAssessment(assessment))
+
+    if (user && !dbUnavailable && !supabaseStatus.dbUnavailable) {
+      const { error } = await supabase.from('assessments').insert(
+        assessments.map((assessment) => ({
+          user_id: user.id,
+          course: assessment.course,
+          item: assessment.item,
+          score: assessment.score,
+          weight: assessment.weight,
+          assessed_at: assessment.date?.toISOString() ?? null,
+          status: assessment.status,
+          block_id: assessment.blockId ?? blockLabel,
+          source: 'pdf',
+        }))
+      )
+      if (error && isSupabaseTableMissing(error, 'assessments')) {
+        setGlobalDbUnavailable(true)
+      }
+    }
+
+    addToast({ message: t('integrations.pdf.imported', { count: assessments.length }) })
+    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'dashboard' } }))
   }
 
   const handleIcsUrlSave = async () => {
@@ -604,6 +697,121 @@ export function IntegrationsSection() {
         )}
         {!csvHasData && (
           <div className="mt-4 text-xs text-muted-foreground">{t('integrations.csv.waiting')}</div>
+        )}
+      </CardShell>
+
+      <CardShell title={t('integrations.pdf.title')}>
+        <p className="text-sm text-muted-foreground">{t('integrations.pdf.description')}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <label className="inline-flex cursor-pointer items-center rounded-md bg-muted px-4 py-2 text-sm font-medium">
+            {t('integrations.pdf.upload')}
+            <input
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(event) => setPdfFile(event.target.files?.[0] ?? null)}
+            />
+          </label>
+          {pdfFile && <span className="text-xs text-muted-foreground">{pdfFile.name}</span>}
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="text-xs">
+            {t('integrations.pdf.blockLabel')}
+            <input
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              value={blockLabel}
+              onChange={(event) => setBlockLabel(event.target.value)}
+              placeholder="25/26 Blok 3"
+            />
+          </label>
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            onClick={() => void handlePdfAnalyse()}
+            disabled={!pdfFile || pdfLoading}
+          >
+            {pdfLoading ? t('integrations.pdf.analyzing') : t('integrations.pdf.analyze')}
+          </button>
+          {pdfError && <span className="text-xs text-rose-500">{pdfError}</span>}
+        </div>
+
+        {pdfWarnings.length > 0 && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t('integrations.pdf.warning')}
+          </div>
+        )}
+
+        {pdfRows.length > 0 && (
+          <div className="mt-4 space-y-3">
+            <div className="text-xs text-muted-foreground">
+              {t('integrations.pdf.found', {
+                total: pdfRows.length,
+                passed: pdfRows.filter((row) => row.status === 'passed').length,
+                pending: pdfRows.filter((row) => row.status === 'pending').length,
+              })}
+            </div>
+            <div className="space-y-2">
+              {pdfRows.map((row) => (
+                <div
+                  key={row.id}
+                  className="grid gap-2 rounded-md border border-border bg-background p-3 md:grid-cols-[1fr_auto_auto]"
+                >
+                  <input
+                    className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs"
+                    value={row.item}
+                    onChange={(event) =>
+                      setPdfRows((prev) =>
+                        prev.map((item) =>
+                          item.id === row.id ? { ...item, item: event.target.value } : item
+                        )
+                      )
+                    }
+                  />
+                  <select
+                    className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+                    value={row.status}
+                    onChange={(event) =>
+                      setPdfRows((prev) =>
+                        prev.map((item) =>
+                          item.id === row.id
+                            ? {
+                                ...item,
+                                status: event.target.value as PdfRow['status'],
+                              }
+                            : item
+                        )
+                      )
+                    }
+                  >
+                    <option value="passed">{t('blockProgress.status.passed')}</option>
+                    <option value="pending">{t('blockProgress.status.pending')}</option>
+                    <option value="failed">{t('blockProgress.status.failed')}</option>
+                  </select>
+                  <button
+                    className="text-xs text-rose-500"
+                    onClick={() => setPdfRows((prev) => prev.filter((item) => item.id !== row.id))}
+                  >
+                    {t('integrations.pdf.remove')}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                onClick={() => void handlePdfSave()}
+              >
+                {t('integrations.pdf.confirm')}
+              </button>
+              <button
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium"
+                onClick={() => setPdfRows([])}
+              >
+                {t('integrations.pdf.back')}
+              </button>
+            </div>
+          </div>
         )}
       </CardShell>
 

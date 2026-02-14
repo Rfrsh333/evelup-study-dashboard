@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS public.assessments (
   assessed_at TIMESTAMPTZ,
   status TEXT NOT NULL DEFAULT 'pending',
   block_id TEXT,
-  source TEXT NOT NULL DEFAULT 'csv',
+  source TEXT NOT NULL DEFAULT 'pdf',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -217,7 +217,7 @@ ALTER TABLE IF EXISTS public.assessments
   ADD COLUMN IF NOT EXISTS assessed_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
   ADD COLUMN IF NOT EXISTS block_id TEXT,
-  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'csv',
+  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'pdf',
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
 DO $$

@@ -31,7 +31,7 @@ export interface Assessment {
   date?: Date
   status: 'passed' | 'failed' | 'pending'
   blockId?: string
-  source: 'csv' | 'manual'
+  source: 'csv' | 'pdf' | 'manual'
 }
 
 export interface FocusSession {

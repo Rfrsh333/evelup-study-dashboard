@@ -4,6 +4,9 @@ ALTER TABLE IF EXISTS public.assessments
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
   ADD COLUMN IF NOT EXISTS block_id TEXT;
 
+ALTER TABLE IF EXISTS public.assessments
+  ALTER COLUMN source SET DEFAULT 'pdf';
+
 DO $$
 BEGIN
   IF NOT EXISTS (

@@ -35,7 +35,7 @@ const AssessmentSchema = z.object({
   date: z.coerce.date().optional(),
   status: z.enum(['passed', 'failed', 'pending']),
   blockId: z.string().optional(),
-  source: z.enum(['csv', 'manual']),
+  source: z.enum(['csv', 'pdf', 'manual']),
 })
 
 const FocusSessionSchema = z.object({

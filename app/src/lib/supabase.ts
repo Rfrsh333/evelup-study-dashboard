@@ -142,6 +142,107 @@ export interface Database {
           created_at?: string
         }
       }
+      integrations: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: string
+          status?: string
+          created_at?: string
+        }
+      }
+      oauth_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          access_token: string
+          refresh_token: string | null
+          expires_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          access_token: string
+          refresh_token?: string | null
+          expires_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: string
+          access_token?: string
+          refresh_token?: string | null
+          expires_at?: string | null
+          created_at?: string
+        }
+      }
+      calendar_sources: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          ics_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          ics_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          ics_url?: string | null
+          created_at?: string
+        }
+      }
+      lti_launches: {
+        Row: {
+          id: string
+          user_id: string | null
+          issuer: string
+          deployment_id: string | null
+          context: any
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          issuer: string
+          deployment_id?: string | null
+          context?: any
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          issuer?: string
+          deployment_id?: string | null
+          context?: any
+          created_at?: string
+        }
+      }
     }
   }
 }

@@ -21,3 +21,23 @@ supabase functions deploy send-daily-reminders
 ```
 supabase functions serve send-daily-reminders --env-file ./supabase/.env
 ```
+
+## canvas-oauth-start / canvas-oauth-callback
+Server-side Canvas OAuth flow. Keep the client secret on the server.
+
+### Required secrets
+- `CANVAS_BASE_URL` (e.g. `https://canvas.instructure.com`)
+- `CANVAS_CLIENT_ID`
+- `CANVAS_CLIENT_SECRET`
+- `CANVAS_REDIRECT_URI` (full URL to `.../functions/v1/canvas-oauth-callback`)
+
+### Deploy
+```
+supabase functions deploy canvas-oauth-start
+supabase functions deploy canvas-oauth-callback
+```
+
+## lti
+Placeholder endpoints:
+- `/lti/login`
+- `/lti/launch`

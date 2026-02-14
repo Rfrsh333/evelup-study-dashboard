@@ -102,6 +102,120 @@ CREATE POLICY IF NOT EXISTS "Users can view own events"
   ON public.events FOR SELECT
   USING (auth.uid() = user_id);
 
+-- Integrations registry
+CREATE TABLE IF NOT EXISTS public.integrations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  provider TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'disconnected',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.integrations
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS provider TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'disconnected',
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own integrations"
+  ON public.integrations FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own integrations"
+  ON public.integrations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own integrations"
+  ON public.integrations FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- OAuth tokens (server-side only)
+CREATE TABLE IF NOT EXISTS public.oauth_tokens (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  provider TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.oauth_tokens
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS provider TEXT,
+  ADD COLUMN IF NOT EXISTS access_token TEXT,
+  ADD COLUMN IF NOT EXISTS refresh_token TEXT,
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.oauth_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own oauth tokens"
+  ON public.oauth_tokens FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own oauth tokens"
+  ON public.oauth_tokens FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own oauth tokens"
+  ON public.oauth_tokens FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Calendar sources
+CREATE TABLE IF NOT EXISTS public.calendar_sources (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  ics_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.calendar_sources
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS name TEXT,
+  ADD COLUMN IF NOT EXISTS ics_url TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.calendar_sources ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own calendar sources"
+  ON public.calendar_sources FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own calendar sources"
+  ON public.calendar_sources FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can delete own calendar sources"
+  ON public.calendar_sources FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- LTI launch context
+CREATE TABLE IF NOT EXISTS public.lti_launches (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  issuer TEXT NOT NULL,
+  deployment_id TEXT,
+  context JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.lti_launches
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS issuer TEXT,
+  ADD COLUMN IF NOT EXISTS deployment_id TEXT,
+  ADD COLUMN IF NOT EXISTS context JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.lti_launches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own lti launches"
+  ON public.lti_launches FOR SELECT
+  USING (auth.uid() = user_id);
+
 -- Push subscriptions (web push)
 CREATE TABLE IF NOT EXISTS public.push_subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -148,6 +262,18 @@ CREATE INDEX IF NOT EXISTS idx_events_user_id_created_at
 
 CREATE INDEX IF NOT EXISTS idx_events_type
   ON public.events(type);
+
+CREATE INDEX IF NOT EXISTS idx_integrations_user_id
+  ON public.integrations(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user_id
+  ON public.oauth_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_calendar_sources_user_id
+  ON public.calendar_sources(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_lti_launches_user_id
+  ON public.lti_launches(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id
   ON public.push_subscriptions(user_id);

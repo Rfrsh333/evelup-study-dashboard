@@ -1,73 +1,171 @@
-# React + TypeScript + Vite
+# LevelUp - Study Performance Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Zie je studie-momentum. Bouw discipline. Haal je deadlines.
 
-Currently, two official plugins are available:
+A retention-focused SaaS for HBO students in the Netherlands. Track daily objectives, build study momentum, and level up your academic performance.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+- **Frontend:** React 19 + TypeScript + Vite
+- **Styling:** Tailwind CSS v4
+- **Backend:** Supabase (Auth + Postgres + RLS)
+- **Hosting:** Ready for Vercel/Railway
+- **Analytics:** Event tracking built-in
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Quick Start
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Set Up Supabase
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Create project at [supabase.com](https://supabase.com) (EU region)
+2. Run the SQL schema: `supabase-schema.sql`
+3. Copy `.env.example` to `.env`
+4. Add your Supabase credentials:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+
+### 4. Build for Production
+```bash
+npm run build
+```
+
+## Features
+
+### Daily Objectives (Retention Engine)
+- Auto-generated daily goals (2 focus sessions, 45 min study, 1 deadline review)
+- Auto-tracking for focus & study progress
+- Bonus +25 XP when all objectives completed
+- Momentum mode system (Recovery/Stable/Performance)
+
+### Momentum Tracking
+- Multi-factor scoring (0-100)
+  - 40% Consistency (study days)
+  - 30% Deadline Control (on-track %)
+  - 20% Focus Score (weekly sessions)
+  - 10% Streak Bonus
+- Weekly trend comparison
+- Visual breakdown of components
+
+### XP & Leveling
+- Progressive XP scaling (15% increase per level)
+- Dynamic level titles (Beginner → Legend)
+- Level-up animations
+- XP multipliers based on momentum mode
+
+### Study Features
+- Deadline tracking with status badges
+- Study log history (7-day chart)
+- Focus session counter
+- Streak tracking
+
+### Analytics
+- Event tracking for all user actions
+- Cohort analysis ready
+- Privacy-first (user-scoped, GDPR-compliant)
+
+## Architecture
+
+### Domain Logic (Pure Functions)
+- `src/domain/xp.ts` - Level calculations
+- `src/domain/momentum.ts` - Momentum scoring
+- `src/domain/streak.ts` - Streak tracking
+- `src/domain/daily-objectives.ts` - Daily goals engine
+
+### State Management
+- React Context with optimistic updates
+- Supabase sync (500ms debounce)
+- localStorage fallback for offline mode
+
+### Database Schema
+- `users` - User profiles with language preferences
+- `user_state` - JSONB state storage
+- `events` - Analytics event log
+
+All tables have Row Level Security enabled.
+
+## Deployment
+
+### Vercel (Recommended)
+1. Connect GitHub repo
+2. Add environment variables
+3. Deploy
+4. Done
+
+### Railway
+1. Create new project
+2. Add Postgres (or use Supabase)
+3. Set environment variables
+4. Deploy from GitHub
+
+## Development
+
+### Seed Demo Data
+Click "Demo Data" button in header to load sample data for testing.
+
+### Reset Data
+Click "Reset" button to clear all user data (includes confirmation dialog).
+
+### Event Tracking
+All major user actions are tracked automatically:
+- Daily objective completions
+- Deadline completions
+- Focus session completions
+- Level ups
+- Logins
+
+## Roadmap
+
+### Phase 1: MVP (Complete)
+- ✅ Daily Objectives system
+- ✅ Momentum tracking
+- ✅ XP & leveling
+- ✅ Supabase auth & backend
+- ✅ Event tracking
+
+### Phase 2: Monetization (Q2 2026)
+- [ ] Pro tier (€4.99/month)
+- [ ] School licenses
+- [ ] Payment integration (Stripe)
+- [ ] Admin dashboard
+
+### Phase 3: Growth (Q3 2026)
+- [ ] Mobile app (React Native)
+- [ ] Dutch/English i18n
+- [ ] Referral system
+- [ ] Study group challenges
+
+### Phase 4: Platform (Q4 2026)
+- [ ] Calendar integrations
+- [ ] AI study suggestions
+- [ ] Marketplace for study resources
+- [ ] API for third-party integrations
+
+## Launch Strategy
+
+See [LAUNCH_STRATEGY.md](./LAUNCH_STRATEGY.md) for complete go-to-market plan including:
+- 30-day pilot roadmap
+- Strategy for first 100 users
+- Retention targets
+- Monetization plan
+- School license GTM
+- Investor metrics
+
+## License
+
+Proprietary - All rights reserved
+
+---
+
+**Built for HBO students. Designed for traction. Ready for investment.**

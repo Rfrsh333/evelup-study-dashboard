@@ -20,6 +20,7 @@ import {
 } from '@/integrations/brightspace/csvImport'
 
 const ICS_URL_KEY = 'levelup-ics-url'
+const BLOCK_LABEL_KEY = 'levelup-block-label'
 
 export function IntegrationsSection() {
   const { t, ready } = useTranslation()
@@ -39,6 +40,9 @@ export function IntegrationsSection() {
   const [csvStep, setCsvStep] = useState<'map' | 'preview'>('map')
   const [icsUrlError, setIcsUrlError] = useState<string | null>(null)
   const [icsNeedsManual, setIcsNeedsManual] = useState(false)
+  const [blockLabel, setBlockLabel] = useState<string>(
+    () => localStorage.getItem(BLOCK_LABEL_KEY) ?? '25/26 Blok 3'
+  )
 
   useEffect(() => {
     let active = true
@@ -122,6 +126,8 @@ export function IntegrationsSection() {
           score: parsed.headers[2] ?? parsed.headers[0] ?? '',
           weight: null,
           date: null,
+          status: null,
+          block: null,
         })
       } else {
         setCsvMapping(null)
@@ -145,7 +151,9 @@ export function IntegrationsSection() {
   const handleCsvImport = async () => {
     if (!csvMapping || csvRows.length === 0) return
 
-    const assessments = mapRowsToAssessments(csvRows, csvMapping).filter(
+    localStorage.setItem(BLOCK_LABEL_KEY, blockLabel)
+
+    const assessments = mapRowsToAssessments(csvRows, csvMapping, blockLabel).filter(
       (assessment) => assessment.course && assessment.item
     )
     if (assessments.length === 0) {
@@ -166,6 +174,8 @@ export function IntegrationsSection() {
             score: assessment.score,
             weight: assessment.weight,
             assessed_at: assessment.date?.toISOString() ?? null,
+            status: assessment.status,
+            block_id: assessment.blockId ?? blockLabel,
             source: assessment.source,
           }))
         )
@@ -248,7 +258,7 @@ export function IntegrationsSection() {
 
   const csvPreview = useMemo(() => {
     if (!csvMapping || csvRows.length === 0) return null
-    const assessments = mapRowsToAssessments(csvRows, csvMapping)
+    const assessments = mapRowsToAssessments(csvRows, csvMapping, blockLabel)
     const distinctCourses = new Set(assessments.map((assessment) => assessment.course))
     const summaries = calculateGradeSummaries(assessments)
     return {
@@ -396,6 +406,17 @@ export function IntegrationsSection() {
             parseCsvInput(event.target.value)
           }}
         />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="text-xs">
+            {t('integrations.csv.blockLabel')}
+            <input
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+              value={blockLabel}
+              onChange={(event) => setBlockLabel(event.target.value)}
+              placeholder="25/26 Blok 3"
+            />
+          </label>
+        </div>
         {csvHasData && csvMapping && csvStep === 'map' && (
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="text-xs">
@@ -471,6 +492,46 @@ export function IntegrationsSection() {
                   setCsvMapping({
                     ...csvMapping,
                     date: event.target.value || null,
+                  })
+                }
+              >
+                <option value="">{t('integrations.csv.mapping.optional')}</option>
+                {mappingOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs">
+              {t('integrations.csv.mapping.status')}
+              <select
+                className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+                value={csvMapping.status ?? ''}
+                onChange={(event) =>
+                  setCsvMapping({
+                    ...csvMapping,
+                    status: event.target.value || null,
+                  })
+                }
+              >
+                <option value="">{t('integrations.csv.mapping.optional')}</option>
+                {mappingOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs">
+              {t('integrations.csv.mapping.block')}
+              <select
+                className="mt-1 w-full rounded-md border border-border bg-background px-2 py-2 text-sm"
+                value={csvMapping.block ?? ''}
+                onChange={(event) =>
+                  setCsvMapping({
+                    ...csvMapping,
+                    block: event.target.value || null,
                   })
                 }
               >

@@ -8,6 +8,8 @@ export interface CsvMapping {
   score: string
   weight: string | null
   date: string | null
+  status: string | null
+  block: string | null
 }
 
 export interface GradeSummary {
@@ -96,6 +98,8 @@ export function guessMapping(headers: string[]): CsvMapping | null {
   const score = find(['score', 'grade', 'cijfer', 'points', 'punten'])
   const weight = find(['weight', 'weging', 'percentage', 'gewicht'])
   const date = find(['date', 'due', 'deadline', 'datum'])
+  const status = find(['status', 'resultaat', 'result', 'voldaan', 'behaald'])
+  const block = find(['block', 'blok', 'periode', 'term', 'period'])
 
   if (!course || !item || !score) return null
 
@@ -105,6 +109,8 @@ export function guessMapping(headers: string[]): CsvMapping | null {
     score,
     weight: weight || null,
     date: date || null,
+    status: status || null,
+    block: block || null,
   }
 }
 
@@ -124,20 +130,34 @@ function parseDate(value: string): Date | undefined {
 
 export function mapRowsToAssessments(
   rows: CsvRow[],
-  mapping: CsvMapping
+  mapping: CsvMapping,
+  fallbackBlockId: string
 ): Omit<Assessment, 'id'>[] {
   return rows.map((row) => {
     const weight = mapping.weight ? parseNumber(row[mapping.weight] ?? '') : null
     const score = parseNumber(row[mapping.score] ?? '')
+    const statusValue = mapping.status ? (row[mapping.status] ?? '') : ''
+    const status = normalizeStatus(statusValue)
+    const blockId = mapping.block ? row[mapping.block] ?? '' : fallbackBlockId
     return {
       course: row[mapping.course] || 'Course',
       item: row[mapping.item] || 'Assessment',
       score,
       weight,
       date: mapping.date ? parseDate(row[mapping.date] ?? '') : undefined,
+      status,
+      blockId: blockId || fallbackBlockId,
       source: 'csv',
     }
   })
+}
+
+function normalizeStatus(value: string): 'passed' | 'failed' | 'pending' {
+  const normalized = value.toLowerCase().trim()
+  if (!normalized) return 'pending'
+  if (normalized.includes('voldaan') || normalized.includes('pass')) return 'passed'
+  if (normalized.includes('niet voldaan') || normalized.includes('fail')) return 'failed'
+  return 'pending'
 }
 
 function normalizeWeights(weights: number[]): number[] {

@@ -11,6 +11,7 @@ import { getTodayOverview } from '@/domain/today'
 import { pickBestFocusWindow, getBusyIntervalsForDay, getFreeWindows } from '@/domain/schedule'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
+import { CardShell } from '@/components/common/CardShell'
 
 export function DashboardPage() {
   const { state, addPersonalEvent } = useAppState()
@@ -19,8 +20,21 @@ export function DashboardPage() {
     state.schoolDeadlines,
     state.personalEvents
   )
-
   const now = new Date()
+  const windowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)
+  const personalWindowCount = state.personalEvents.filter(
+    (ev) => ev.start >= windowStart && ev.start <= windowEnd
+  ).length
+
+  if (import.meta.env.DEV) {
+    console.debug('Dashboard window', {
+      windowStart: windowStart.toISOString(),
+      windowEnd: windowEnd.toISOString(),
+      personalWindowCount,
+      personalToday: personalToday.length,
+    })
+  }
   const busy = getBusyIntervalsForDay(state.personalEvents, now)
   const dayStart = new Date(now)
   dayStart.setHours(8, 0, 0, 0)
@@ -85,6 +99,30 @@ export function DashboardPage() {
       {/* Retention messaging */}
       <RetentionBanner />
 
+      <CardShell title={t('dashboard.promise.title')}>
+        <p className="text-sm text-muted-foreground">{t('dashboard.promise.subtitle')}</p>
+        <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
+          <div className="rounded-md border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              {t('dashboard.onboarding.step', { step: 1 })}
+            </p>
+            <p className="mt-1 font-medium">{t('dashboard.onboarding.step1')}</p>
+          </div>
+          <div className="rounded-md border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              {t('dashboard.onboarding.step', { step: 2 })}
+            </p>
+            <p className="mt-1 font-medium">{t('dashboard.onboarding.step2')}</p>
+          </div>
+          <div className="rounded-md border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              {t('dashboard.onboarding.step', { step: 3 })}
+            </p>
+            <p className="mt-1 font-medium">{t('dashboard.onboarding.step3')}</p>
+          </div>
+        </div>
+      </CardShell>
+
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t('today.school.title')}</h2>
@@ -128,7 +166,11 @@ export function DashboardPage() {
         </div>
         <div className="space-y-3">
           {personalToday.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('today.personal.empty')}</p>
+            <p className="text-sm text-muted-foreground">
+              {personalWindowCount > 0
+                ? t('calendar.outOfWindow', { count: personalWindowCount })
+                : t('today.personal.empty')}
+            </p>
           ) : (
             personalToday.map((ev) => (
               <div key={ev.id} className="rounded-lg border border-border bg-card/50 p-3 text-sm">
@@ -140,6 +182,16 @@ export function DashboardPage() {
             ))
           )}
         </div>
+        {personalToday.length === 0 && personalWindowCount > 0 && (
+          <button
+            className="text-xs font-medium text-primary"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
+            }
+          >
+            {t('today.personal.viewWeek')}
+          </button>
+        )}
 
         <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
           <p className="font-medium">{t('today.focusSuggestion.title')}</p>

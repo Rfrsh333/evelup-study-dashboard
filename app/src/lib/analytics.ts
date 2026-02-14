@@ -35,9 +35,9 @@ export async function trackEvent(
 
     await supabase.from('events').insert({
       user_id: user.id,
-      event_type: eventType,
+      type: eventType,
       metadata,
-      timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     })
   } catch (error) {
     // Fail silently - don't block user actions due to analytics errors
@@ -60,7 +60,7 @@ export async function getEventCount(eventType: EventType): Promise<number> {
       .from('events')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('event_type', eventType)
+      .eq('type', eventType)
 
     return count || 0
   } catch (error) {

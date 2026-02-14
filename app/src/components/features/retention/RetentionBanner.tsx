@@ -4,10 +4,23 @@ import { useTranslation } from '@/i18n'
 import { differenceInHours, format } from 'date-fns'
 
 export function RetentionBanner() {
-  const { state, derived } = useAppState()
-  const { t } = useTranslation()
+  const { state, derived, dbUnavailable } = useAppState()
+  const { t, ready } = useTranslation()
   const { currentStreak, lastStudyDate } = state.streak
   const { studyWindowStart, studyWindowEnd } = state.preferences
+
+  if (!ready) {
+    return <div className="h-10 rounded-lg bg-muted/40" aria-hidden />
+  }
+
+  if (dbUnavailable) {
+    return (
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-900">
+        <p className="text-sm font-medium">{t('system.dbLocalMode.title')}</p>
+        <p className="text-xs opacity-80">{t('system.dbLocalMode.subtitle')}</p>
+      </div>
+    )
+  }
 
   // Check if user is inactive (>24h since last study)
   const isInactive =

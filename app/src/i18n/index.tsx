@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { nl } from './nl'
 import { en } from './en'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export type Language = 'nl' | 'en'
 
@@ -15,6 +15,7 @@ interface I18nContextValue {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string, params?: Record<string, string | number>) => string
+  ready: boolean
 }
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined)
@@ -60,6 +61,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     async function loadLanguage() {
       try {
         // Try to get from Supabase user profile first
+        if (!isSupabaseConfigured) {
+          return
+        }
+
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user) {
@@ -98,6 +103,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
     // Try to save to Supabase if authenticated
     try {
+      if (!isSupabaseConfigured) return
+
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
@@ -121,10 +128,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     language,
     setLanguage,
     t,
-  }
-
-  if (loading) {
-    return null // Or a loading spinner
+    ready: !loading,
   }
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
@@ -140,6 +144,6 @@ export function useI18n() {
 
 // Shorthand hook for just the t function
 export function useTranslation() {
-  const { t } = useI18n()
-  return { t }
+  const { t, ready } = useI18n()
+  return { t, ready }
 }

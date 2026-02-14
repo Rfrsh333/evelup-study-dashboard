@@ -3,8 +3,20 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found. Using local mode.')
+const isValidUrl = (() => {
+  try {
+    if (!supabaseUrl) return false
+    new URL(supabaseUrl)
+    return true
+  } catch {
+    return false
+  }
+})()
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && isValidUrl)
+
+if (!isSupabaseConfigured) {
+  console.warn('Supabase credentials missing or invalid. Running in local mode.')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -44,18 +56,24 @@ export interface Database {
           id: string
           user_id: string
           state: any // JSONB
+          version: number
+          created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
           state: any
+          version?: number
+          created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           state?: any
+          version?: number
+          created_at?: string
           updated_at?: string
         }
       }
@@ -63,23 +81,23 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          event_type: string
-          timestamp: string
+          type: string
           metadata: any // JSONB
+          created_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          event_type: string
-          timestamp?: string
+          type: string
           metadata?: any
+          created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          event_type?: string
-          timestamp?: string
+          type?: string
           metadata?: any
+          created_at?: string
         }
       }
     }

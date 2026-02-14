@@ -1,7 +1,8 @@
 -- LevelUp Database Schema for Supabase
 -- Run this in your Supabase SQL Editor
 
--- Enable UUID extension
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table (extends Supabase auth.users)
@@ -12,81 +13,111 @@ CREATE TABLE IF NOT EXISTS public.users (
   preferred_language TEXT DEFAULT 'nl' CHECK (preferred_language IN ('nl', 'en'))
 );
 
+-- Ensure users table has expected columns (idempotent)
+ALTER TABLE IF EXISTS public.users
+  ADD COLUMN IF NOT EXISTS email TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS preferred_language TEXT DEFAULT 'nl';
+
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- Users can only read/update their own data
-CREATE POLICY "Users can view own data"
+CREATE POLICY IF NOT EXISTS "Users can view own data"
   ON public.users FOR SELECT
   USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own data"
+CREATE POLICY IF NOT EXISTS "Users can update own data"
   ON public.users FOR UPDATE
   USING (auth.uid() = id);
 
 -- User state table (replaces localStorage)
 CREATE TABLE IF NOT EXISTS public.user_state (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id)
 );
+
+-- Ensure user_state table has expected columns (idempotent)
+ALTER TABLE IF EXISTS public.user_state
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 -- Enable Row Level Security
 ALTER TABLE public.user_state ENABLE ROW LEVEL SECURITY;
 
 -- Users can only access their own state
-CREATE POLICY "Users can view own state"
+CREATE POLICY IF NOT EXISTS "Users can view own state"
   ON public.user_state FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own state"
+CREATE POLICY IF NOT EXISTS "Users can insert own state"
   ON public.user_state FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own state"
+CREATE POLICY IF NOT EXISTS "Users can update own state"
   ON public.user_state FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own state"
+CREATE POLICY IF NOT EXISTS "Users can delete own state"
   ON public.user_state FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Events table (analytics foundation)
 CREATE TABLE IF NOT EXISTS public.events (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
-  event_type TEXT NOT NULL,
-  timestamp TIMESTAMPTZ DEFAULT NOW(),
-  metadata JSONB DEFAULT '{}'::jsonb
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  type TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure events table has expected columns (idempotent)
+ALTER TABLE IF EXISTS public.events
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS type TEXT,
+  ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
 -- Enable Row Level Security
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 -- Users can only insert and view their own events
-CREATE POLICY "Users can insert own events"
+CREATE POLICY IF NOT EXISTS "Users can insert own events"
   ON public.events FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can view own events"
+CREATE POLICY IF NOT EXISTS "Users can view own events"
   ON public.events FOR SELECT
   USING (auth.uid() = user_id);
 
--- Index for performance
-CREATE INDEX IF NOT EXISTS idx_events_user_id_timestamp
-  ON public.events(user_id, timestamp DESC);
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_user_state_user_id
+  ON public.user_state(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_state_created_at
+  ON public.user_state(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_events_user_id_created_at
+  ON public.events(user_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_events_type
-  ON public.events(event_type);
+  ON public.events(type);
 
 -- Function to automatically create user record on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.users (id, email)
-  VALUES (NEW.id, NEW.email);
+  VALUES (NEW.id, NEW.email)
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

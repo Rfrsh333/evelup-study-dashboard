@@ -1,6 +1,7 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 import type { AppState } from '@/domain/types'
 import { getDefaultAppState } from './storage'
+import { isUserStateTableMissing, SupabaseTableMissingError } from './supabase-errors'
 
 /**
  * Load app state from Supabase for authenticated user
@@ -8,6 +9,10 @@ import { getDefaultAppState } from './storage'
  */
 export async function loadAppStateFromSupabase(): Promise<AppState> {
   try {
+    if (!isSupabaseConfigured) {
+      return getDefaultAppState()
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -23,6 +28,9 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
       .single()
 
     if (error) {
+      if (isUserStateTableMissing(error)) {
+        throw new SupabaseTableMissingError()
+      }
       if (error.code === 'PGRST116') {
         // No rows found - first time user
         return getDefaultAppState()
@@ -69,6 +77,9 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
       lastUpdated: new Date(state.lastUpdated),
     }
   } catch (error) {
+    if (error instanceof SupabaseTableMissingError) {
+      throw error
+    }
     console.error('Failed to load state from Supabase:', error)
     return getDefaultAppState()
   }
@@ -79,6 +90,8 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
  */
 export async function saveAppStateToSupabase(state: AppState): Promise<void> {
   try {
+    if (!isSupabaseConfigured) return
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -106,10 +119,16 @@ export async function saveAppStateToSupabase(state: AppState): Promise<void> {
       )
 
     if (error) {
+      if (isUserStateTableMissing(error)) {
+        throw new SupabaseTableMissingError()
+      }
       console.error('Error saving state to Supabase:', error)
       throw error
     }
   } catch (error) {
+    if (error instanceof SupabaseTableMissingError) {
+      throw error
+    }
     console.error('Failed to save state to Supabase:', error)
     // In production, implement retry logic or queue
   }
@@ -120,6 +139,8 @@ export async function saveAppStateToSupabase(state: AppState): Promise<void> {
  */
 export async function clearAppStateFromSupabase(): Promise<void> {
   try {
+    if (!isSupabaseConfigured) return
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -128,8 +149,14 @@ export async function clearAppStateFromSupabase(): Promise<void> {
       return
     }
 
-    await supabase.from('user_state').delete().eq('user_id', user.id)
+    const { error } = await supabase.from('user_state').delete().eq('user_id', user.id)
+    if (error && isUserStateTableMissing(error)) {
+      throw new SupabaseTableMissingError()
+    }
   } catch (error) {
+    if (error instanceof SupabaseTableMissingError) {
+      throw error
+    }
     console.error('Failed to clear state from Supabase:', error)
   }
 }

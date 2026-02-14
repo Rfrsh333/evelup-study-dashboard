@@ -1,12 +1,13 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextValue {
   user: User | null
   session: Session | null
   loading: boolean
+  error: string | null
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
@@ -18,29 +19,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const timeoutRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    let cancelled = false
+    let resolved = false
+
+    if (import.meta.env.DEV) console.debug('Auth init start')
+
+    if (!isSupabaseConfigured) {
+      setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
       setLoading(false)
-    })
+      if (import.meta.env.DEV) console.debug('Auth loading false')
+      return
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      if (cancelled || resolved) return
+      setError('Auth initialization timed out')
+      setLoading(false)
+      if (import.meta.env.DEV) console.debug('Auth loading false')
+    }, 2500)
+
+    // Get initial session
+    const loadSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (cancelled) return
+        if (import.meta.env.DEV) console.debug('Auth session received')
+        setSession(session)
+        setUser(session?.user ?? null)
+        setError(null)
+      } catch {
+        if (cancelled) return
+        setError('Failed to load auth session')
+      } finally {
+        if (cancelled) return
+        resolved = true
+        setLoading(false)
+        if (import.meta.env.DEV) console.debug('Auth loading false')
+      }
+    }
+
+    loadSession()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (import.meta.env.DEV) console.debug('Auth session received')
       setSession(session)
       setUser(session?.user ?? null)
+      setError(null)
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!isSupabaseConfigured) {
+        return { error: new Error('Supabase is not configured') }
+      }
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -49,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Track login event
         await supabase.from('events').insert({
           user_id: data.user.id,
-          event_type: 'login',
-          timestamp: new Date().toISOString(),
+          type: 'login',
+          created_at: new Date().toISOString(),
         })
       }
       return { error }
@@ -61,6 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      if (!isSupabaseConfigured) {
+        return { error: new Error('Supabase is not configured') }
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -72,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!isSupabaseConfigured) return
     await supabase.auth.signOut()
   }
 
@@ -79,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     loading,
+    error,
     signIn,
     signUp,
     signOut,

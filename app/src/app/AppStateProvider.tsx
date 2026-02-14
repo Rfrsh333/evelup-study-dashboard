@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import type { AppState, DerivedState, Deadline, FocusSession, StudyLog } from '@/domain/types'
 import { loadAppState, saveAppState, clearAppState, getDefaultAppState } from '@/lib/storage'
 import { loadAppStateFromSupabase, saveAppStateToSupabase, clearAppStateFromSupabase } from '@/lib/supabase-storage'
-import { supabase } from '@/lib/supabase'
 import { calculateStreak } from '@/domain/streak'
 import { calculateXPState, awardXP, XP_REWARDS } from '@/domain/xp'
 import { calculateMomentumScore } from '@/domain/momentum'
@@ -22,12 +21,16 @@ import {
 import { startOfWeek, endOfWeek } from 'date-fns'
 import { generateDemoData } from '@/lib/demo-data'
 import { trackEvent } from '@/lib/analytics'
+import { useAuth } from './AuthProvider'
+import { SupabaseTableMissingError } from '@/lib/supabase-errors'
+import { isSupabaseConfigured } from '@/lib/supabase'
 import { calculatePercentile } from '@/domain/percentile'
 
 interface AppStateContextValue {
   // Core state
   state: AppState
   derived: DerivedState
+  dbUnavailable: boolean
 
   // Actions
   addDeadline: (deadline: Omit<Deadline, 'id' | 'createdAt'>) => void
@@ -60,55 +63,92 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [levelUpTriggered, setLevelUpTriggered] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [persistReady, setPersistReady] = useState(false)
+  const [dbUnavailable, setDbUnavailable] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const { user, loading: authLoading } = useAuth()
 
   // Load initial state based on auth status
   useEffect(() => {
-    async function loadInitialState() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
+    if (authLoading) return
+    let cancelled = false
 
-        if (session?.user) {
-          setIsAuthenticated(true)
-          const supabaseState = await loadAppStateFromSupabase()
-          setState(supabaseState)
-        } else {
-          setIsAuthenticated(false)
+    const loadInitialState = async () => {
+      setPersistReady(false)
+
+      if (!isSupabaseConfigured) {
+        setDbUnavailable(true)
+        setIsAuthenticated(false)
+        try {
           const localState = loadAppState()
-          setState(localState)
+          if (!cancelled) setState(localState)
+        } catch (error) {
+          if (!cancelled) {
+            console.error('Error loading local state:', error)
+            setState(getDefaultAppState())
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+            setPersistReady(true)
+          }
         }
-      } catch (error) {
-        console.error('Error loading initial state:', error)
-        setState(getDefaultAppState())
-      } finally {
+        return
+      }
+
+      setDbUnavailable(false)
+
+      if (user) {
+        setIsAuthenticated(true)
+        // Allow rendering immediately; hydrate from Supabase in the background.
         setLoading(false)
+        try {
+          const supabaseState = await loadAppStateFromSupabase()
+          if (!cancelled) setState(supabaseState)
+        } catch (error) {
+          if (!cancelled) {
+            if (error instanceof SupabaseTableMissingError) {
+              setDbUnavailable(true)
+              const localState = loadAppState()
+              setState(localState)
+            } else {
+              console.error('Error loading Supabase state:', error)
+              setState(getDefaultAppState())
+            }
+          }
+        } finally {
+          if (!cancelled) setPersistReady(true)
+        }
+        return
+      }
+
+      setIsAuthenticated(false)
+      try {
+        const localState = loadAppState()
+        if (!cancelled) setState(localState)
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error loading local state:', error)
+          setState(getDefaultAppState())
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setPersistReady(true)
+        }
       }
     }
 
     loadInitialState()
-  }, [])
 
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setIsAuthenticated(true)
-        setLoading(true)
-        const supabaseState = await loadAppStateFromSupabase()
-        setState(supabaseState)
-        setLoading(false)
-      } else if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false)
-        setState(getDefaultAppState())
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, user?.id])
 
   // Persist state with debouncing (optimistic updates)
   useEffect(() => {
-    if (loading) return // Don't save during initial load
+    if (loading || !persistReady) return // Don't save during initial load
 
     // Clear previous timeout
     if (saveTimeoutRef.current) {
@@ -117,8 +157,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     // Debounce save (500ms)
     saveTimeoutRef.current = setTimeout(async () => {
-      if (isAuthenticated) {
-        await saveAppStateToSupabase(state)
+      if (isAuthenticated && !dbUnavailable) {
+        try {
+          await saveAppStateToSupabase(state)
+        } catch (error) {
+          if (error instanceof SupabaseTableMissingError) {
+            setDbUnavailable(true)
+            saveAppState(state) // Fallback to localStorage
+            return
+          }
+          console.error('Error saving state to Supabase:', error)
+          saveAppState(state)
+        }
       } else {
         saveAppState(state) // Fallback to localStorage
       }
@@ -408,14 +458,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const resetAppState = useCallback(async () => {
     trackEvent('data_reset')
-    if (isAuthenticated) {
-      await clearAppStateFromSupabase()
+    if (isAuthenticated && !dbUnavailable) {
+      try {
+        await clearAppStateFromSupabase()
+      } catch (error) {
+        if (error instanceof SupabaseTableMissingError) {
+          setDbUnavailable(true)
+        }
+      }
     } else {
       clearAppState()
     }
     setState(getDefaultAppState())
     setLevelUpTriggered(false)
-  }, [isAuthenticated])
+  }, [isAuthenticated, dbUnavailable])
 
   const seedDemoData = useCallback(() => {
     trackEvent('demo_data_loaded')
@@ -499,6 +555,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const value: AppStateContextValue = {
     state,
     derived,
+    dbUnavailable,
     addDeadline,
     updateDeadline,
     completeDeadline,

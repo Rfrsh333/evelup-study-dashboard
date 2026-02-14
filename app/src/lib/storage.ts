@@ -64,6 +64,22 @@ const DailyObjectivesStateSchema = z.object({
   bonusXPAwarded: z.boolean(),
 })
 
+const WeeklyChallengeStateSchema = z.object({
+  type: z.enum(['focus_sessions', 'study_days', 'study_minutes']),
+  target: z.number(),
+  current: z.number(),
+  completed: z.boolean(),
+  weekStart: z.coerce.date(),
+  bonusXP: z.number(),
+  xpAwarded: z.boolean(),
+})
+
+const UserPreferencesSchema = z.object({
+  studyWindowStart: z.string(),
+  studyWindowEnd: z.string(),
+  language: z.enum(['nl', 'en']),
+})
+
 const AppStateSchema = z.object({
   deadlines: z.array(DeadlineSchema),
   focusSessions: z.array(FocusSessionSchema),
@@ -71,6 +87,8 @@ const AppStateSchema = z.object({
   xp: XPStateSchema,
   streak: StreakStateSchema,
   dailyObjectives: DailyObjectivesStateSchema.nullable(),
+  weeklyChallenge: WeeklyChallengeStateSchema.nullable(),
+  preferences: UserPreferencesSchema,
   version: z.number(),
   lastUpdated: z.coerce.date(),
 })
@@ -93,6 +111,12 @@ export function getDefaultAppState(): AppState {
       lastStudyDate: undefined,
     },
     dailyObjectives: null,
+    weeklyChallenge: null,
+    preferences: {
+      studyWindowStart: '16:00',
+      studyWindowEnd: '18:00',
+      language: 'nl',
+    },
     version: CURRENT_VERSION,
     lastUpdated: new Date(),
   }

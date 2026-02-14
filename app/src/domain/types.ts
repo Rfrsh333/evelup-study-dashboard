@@ -68,6 +68,24 @@ export interface WeeklyData {
   consistencyScore: number
 }
 
+export interface DailyObjectivesState {
+  date: Date
+  objectives: DailyObjective[]
+  allCompleted: boolean
+  momentumMode: 'recovery' | 'stable' | 'performance'
+  bonusXPAwarded: boolean
+}
+
+export interface DailyObjective {
+  id: string
+  type: 'focus_sessions' | 'study_minutes' | 'deadline_review'
+  target: number
+  current: number
+  completed: boolean
+  label: string
+  labelNL: string
+}
+
 // Complete application state
 export interface AppState {
   deadlines: Deadline[]
@@ -75,6 +93,7 @@ export interface AppState {
   studyLogs: StudyLog[]
   xp: XPState
   streak: StreakState
+  dailyObjectives: DailyObjectivesState | null
   version: number
   lastUpdated: Date
 }

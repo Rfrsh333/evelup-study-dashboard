@@ -46,12 +46,31 @@ const XPStateSchema = z.object({
   xpForNextLevel: z.number(),
 })
 
+const DailyObjectiveSchema = z.object({
+  id: z.string(),
+  type: z.enum(['focus_sessions', 'study_minutes', 'deadline_review']),
+  target: z.number(),
+  current: z.number(),
+  completed: z.boolean(),
+  label: z.string(),
+  labelNL: z.string(),
+})
+
+const DailyObjectivesStateSchema = z.object({
+  date: z.coerce.date(),
+  objectives: z.array(DailyObjectiveSchema),
+  allCompleted: z.boolean(),
+  momentumMode: z.enum(['recovery', 'stable', 'performance']),
+  bonusXPAwarded: z.boolean(),
+})
+
 const AppStateSchema = z.object({
   deadlines: z.array(DeadlineSchema),
   focusSessions: z.array(FocusSessionSchema),
   studyLogs: z.array(StudyLogSchema),
   xp: XPStateSchema,
   streak: StreakStateSchema,
+  dailyObjectives: DailyObjectivesStateSchema.nullable(),
   version: z.number(),
   lastUpdated: z.coerce.date(),
 })
@@ -73,6 +92,7 @@ export function getDefaultAppState(): AppState {
       longestStreak: 0,
       lastStudyDate: undefined,
     },
+    dailyObjectives: null,
     version: CURRENT_VERSION,
     lastUpdated: new Date(),
   }

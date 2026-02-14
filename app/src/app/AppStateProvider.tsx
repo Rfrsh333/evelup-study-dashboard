@@ -1,10 +1,18 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
 import type { AppState, DerivedState, Deadline, FocusSession, StudyLog } from '@/domain/types'
 import { loadAppState, saveAppState, clearAppState, getDefaultAppState } from '@/lib/storage'
+import { loadAppStateFromSupabase, saveAppStateToSupabase, clearAppStateFromSupabase } from '@/lib/supabase-storage'
+import { supabase } from '@/lib/supabase'
 import { calculateStreak } from '@/domain/streak'
 import { calculateXPState, awardXP, XP_REWARDS } from '@/domain/xp'
 import { calculateMomentumScore } from '@/domain/momentum'
+import {
+  generateDailyObjectives,
+  shouldRegenerateObjectives,
+  calculateObjectiveProgress,
+  DAILY_OBJECTIVES_BONUS_XP,
+} from '@/domain/daily-objectives'
 import { startOfWeek, endOfWeek } from 'date-fns'
 import { generateDemoData } from '@/lib/demo-data'
 
@@ -27,20 +35,111 @@ interface AppStateContextValue {
   resetAppState: () => void
   seedDemoData: () => void
 
+  // Daily objectives
+  markObjectiveComplete: (objectiveId: string) => void
+
   // Level-up notification
   clearLevelUpNotification: () => void
+
+  // Loading state
+  loading: boolean
 }
 
 const AppStateContext = createContext<AppStateContextValue | undefined>(undefined)
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => loadAppState())
+  const [state, setState] = useState<AppState>(getDefaultAppState)
   const [levelUpTriggered, setLevelUpTriggered] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  // Persist state to localStorage whenever it changes
+  // Load initial state based on auth status
   useEffect(() => {
-    saveAppState(state)
-  }, [state])
+    async function loadInitialState() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          setIsAuthenticated(true)
+          const supabaseState = await loadAppStateFromSupabase()
+          setState(supabaseState)
+        } else {
+          setIsAuthenticated(false)
+          const localState = loadAppState()
+          setState(localState)
+        }
+      } catch (error) {
+        console.error('Error loading initial state:', error)
+        setState(getDefaultAppState())
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadInitialState()
+  }, [])
+
+  // Listen for auth changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setIsAuthenticated(true)
+        setLoading(true)
+        const supabaseState = await loadAppStateFromSupabase()
+        setState(supabaseState)
+        setLoading(false)
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false)
+        setState(getDefaultAppState())
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Persist state with debouncing (optimistic updates)
+  useEffect(() => {
+    if (loading) return // Don't save during initial load
+
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    // Debounce save (500ms)
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (isAuthenticated) {
+        await saveAppStateToSupabase(state)
+      } else {
+        saveAppState(state) // Fallback to localStorage
+      }
+    }, 500)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [state, isAuthenticated, loading])
+
+  // Auto-regenerate daily objectives if needed
+  useEffect(() => {
+    if (loading) return
+
+    if (shouldRegenerateObjectives(state.dailyObjectives)) {
+      setState((prev) => ({
+        ...prev,
+        dailyObjectives: {
+          date: new Date(),
+          objectives: generateDailyObjectives(),
+          allCompleted: false,
+          momentumMode: 'stable',
+          bonusXPAwarded: false,
+        },
+      }))
+    }
+  }, [loading, state.dailyObjectives])
 
   // Calculate derived state with memoization
   const derived = useMemo<DerivedState>(() => {
@@ -73,6 +172,50 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       levelUpTriggered,
     }
   }, [state, levelUpTriggered])
+
+  // Update daily objectives progress automatically
+  useEffect(() => {
+    if (!state.dailyObjectives || loading) return
+
+    const updatedObjectives = calculateObjectiveProgress(
+      state.dailyObjectives.objectives,
+      state.studyLogs,
+      state.focusSessions
+    )
+
+    const allCompleted = updatedObjectives.every((obj) => obj.completed)
+
+    // Award bonus XP if all completed and not yet awarded
+    if (allCompleted && !state.dailyObjectives.bonusXPAwarded) {
+      const { newState: newXP, leveledUp } = awardXP(state.xp, DAILY_OBJECTIVES_BONUS_XP)
+      if (leveledUp) setLevelUpTriggered(true)
+
+      setState((prev) => ({
+        ...prev,
+        dailyObjectives: prev.dailyObjectives
+          ? {
+              ...prev.dailyObjectives,
+              objectives: updatedObjectives,
+              allCompleted: true,
+              bonusXPAwarded: true,
+            }
+          : null,
+        xp: newXP,
+      }))
+    } else {
+      // Just update progress
+      setState((prev) => ({
+        ...prev,
+        dailyObjectives: prev.dailyObjectives
+          ? {
+              ...prev.dailyObjectives,
+              objectives: updatedObjectives,
+              allCompleted,
+            }
+          : null,
+      }))
+    }
+  }, [state.studyLogs, state.focusSessions, loading])
 
   // Actions
   const addDeadline = useCallback((deadline: Omit<Deadline, 'id' | 'createdAt'>) => {
@@ -177,11 +320,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const resetAppState = useCallback(() => {
-    clearAppState()
+  const resetAppState = useCallback(async () => {
+    if (isAuthenticated) {
+      await clearAppStateFromSupabase()
+    } else {
+      clearAppState()
+    }
     setState(getDefaultAppState())
     setLevelUpTriggered(false)
-  }, [])
+  }, [isAuthenticated])
 
   const seedDemoData = useCallback(() => {
     const { deadlines, focusSessions, studyLogs } = generateDemoData()
@@ -203,11 +350,46 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       studyLogs,
       xp: xpState,
       streak,
+      dailyObjectives: null, // Will auto-generate on next render
       version: 1,
       lastUpdated: new Date(),
     })
 
     setLevelUpTriggered(false)
+  }, [])
+
+  const markObjectiveComplete = useCallback((objectiveId: string) => {
+    setState((prev) => {
+      if (!prev.dailyObjectives) return prev
+
+      const updatedObjectives = prev.dailyObjectives.objectives.map((obj) =>
+        obj.id === objectiveId ? { ...obj, completed: true, current: obj.target } : obj
+      )
+
+      const allCompleted = updatedObjectives.every((obj) => obj.completed)
+
+      // Award bonus XP if all completed
+      let newXP = prev.xp
+      let bonusAwarded = prev.dailyObjectives.bonusXPAwarded
+
+      if (allCompleted && !bonusAwarded) {
+        const { newState, leveledUp } = awardXP(prev.xp, DAILY_OBJECTIVES_BONUS_XP)
+        newXP = newState
+        bonusAwarded = true
+        if (leveledUp) setLevelUpTriggered(true)
+      }
+
+      return {
+        ...prev,
+        dailyObjectives: {
+          ...prev.dailyObjectives,
+          objectives: updatedObjectives,
+          allCompleted,
+          bonusXPAwarded: bonusAwarded,
+        },
+        xp: newXP,
+      }
+    })
   }, [])
 
   const clearLevelUpNotification = useCallback(() => {
@@ -226,7 +408,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addStudyLog,
     resetAppState,
     seedDemoData,
+    markObjectiveComplete,
     clearLevelUpNotification,
+    loading,
   }
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>

@@ -11,8 +11,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useAppState } from '@/app/AppStateProvider'
+import { useAuth } from '@/app/AuthProvider'
 import { useToast } from '@/components/ui/toast'
 import { getLevelTitle } from '@/domain/xp'
+import { LogOut } from 'lucide-react'
 
 interface HeaderProps {
   className?: string
@@ -20,6 +22,7 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const { state, resetAppState, seedDemoData } = useAppState()
+  const { signOut } = useAuth()
   const { addToast } = useToast()
   const [resetDialogOpen, setResetDialogOpen] = useState(false)
 
@@ -51,10 +54,13 @@ export function Header({ className }: HeaderProps) {
 
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" onClick={handleSeedDemo}>
-              Seed Demo
+              Demo Data
             </Button>
             <Button variant="outline" size="sm" onClick={() => setResetDialogOpen(true)}>
-              Reset Data
+              Reset
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+              <LogOut className="h-4 w-4" />
             </Button>
 
             <div className="flex items-center gap-4">

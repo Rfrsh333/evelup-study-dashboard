@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AuthProvider } from './AuthProvider'
 import { AppStateProvider } from './AppStateProvider'
 import { ToastProvider } from '@/components/ui/toast'
 
@@ -9,7 +10,9 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ToastProvider>
-      <AppStateProvider>{children}</AppStateProvider>
+      <AuthProvider>
+        <AppStateProvider>{children}</AppStateProvider>
+      </AuthProvider>
     </ToastProvider>
   )
 }

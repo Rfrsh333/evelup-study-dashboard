@@ -2,16 +2,19 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import { useAppState } from '@/app/AppStateProvider'
+import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 export function DailyObjectiveCard() {
   const { state, markObjectiveComplete } = useAppState()
+  const { t } = useTranslation()
   const dailyObjectives = state.dailyObjectives
 
   if (!dailyObjectives) return null
 
   const { objectives, allCompleted } = dailyObjectives
   const completedCount = objectives.filter((obj) => obj.completed).length
+  const remainingForBonus = objectives.length - completedCount
 
   return (
     <Card
@@ -28,17 +31,26 @@ export function DailyObjectiveCard() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold">
-                  {allCompleted ? 'Dagdoelen voltooid! 🎯' : 'Dagdoelen'}
+                  {allCompleted ? t('dailyObjectives.titleCompleted') : t('dailyObjectives.title')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {allCompleted
-                    ? '+25 XP bonus ontvangen'
-                    : `${completedCount} van ${objectives.length} voltooid`}
+                    ? t('dailyObjectives.bonusReceived', { xp: 25 })
+                    : t('dailyObjectives.progressCount', {
+                        completed: completedCount,
+                        total: objectives.length,
+                      })}
                 </p>
+                {/* Micro feedback */}
+                {!allCompleted && remainingForBonus === 1 && (
+                  <p className="mt-1 text-xs font-medium text-primary">
+                    {t('dailyObjectives.oneSessionForBonus')}
+                  </p>
+                )}
               </div>
               {allCompleted && (
                 <div className="rounded-full bg-green-500/20 px-3 py-1 text-sm font-medium text-green-500">
-                  Bonus XP
+                  {t('dailyObjectives.bonusXP')}
                 </div>
               )}
             </div>
@@ -72,12 +84,12 @@ export function DailyObjectiveCard() {
                           objective.completed && 'line-through opacity-60'
                         )}
                       >
-                        {objective.labelNL}
+                        {getObjectiveLabel(objective.type, objective.target, t)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {objective.current} / {objective.target}
-                        {objective.type === 'study_minutes' && ' minuten'}
-                        {objective.type === 'focus_sessions' && ' sessies'}
+                        {objective.type === 'study_minutes' && ` ${t('dailyObjectives.minutes')}`}
+                        {objective.type === 'focus_sessions' && ` ${t('dailyObjectives.sessions')}`}
                       </p>
                     </div>
                   </div>
@@ -88,7 +100,7 @@ export function DailyObjectiveCard() {
                       variant="outline"
                       onClick={() => markObjectiveComplete(objective.id)}
                     >
-                      Markeer voltooid
+                      {t('dailyObjectives.markComplete')}
                     </Button>
                   )}
                 </div>
@@ -99,4 +111,19 @@ export function DailyObjectiveCard() {
       </CardContent>
     </Card>
   )
+}
+
+function getObjectiveLabel(
+  type: 'focus_sessions' | 'study_minutes' | 'deadline_review',
+  target: number,
+  t: (key: string, params?: Record<string, string | number>) => string
+): string {
+  switch (type) {
+    case 'focus_sessions':
+      return t('dailyObjectives.focusSessions', { target })
+    case 'study_minutes':
+      return t('dailyObjectives.studyMinutes', { target })
+    case 'deadline_review':
+      return t('dailyObjectives.deadlineReview')
+  }
 }

@@ -211,6 +211,8 @@ export const en = {
       debugTotals: 'Parsed: {parsed} · Kept: {kept} · Dropped: {dropped}',
       debugToggle: 'Open debug details',
       debugVevents: 'VEVENT count: {count}',
+      outOfWindow:
+        'We found {count} events, but they’re outside your current view (e.g. in the past). Check Week view or widen your time window.',
       urlPlaceholder: 'Paste your ICS URL (optional)',
       refresh: 'Refresh',
       refreshing: 'Refreshing…',
@@ -326,6 +328,7 @@ export const en = {
       title: 'Personal: today plan',
       cta: 'Import calendar',
       empty: 'No personal events today.',
+      viewWeek: 'View week',
     },
     focusSuggestion: {
       title: 'Suggested focus block',
@@ -356,6 +359,19 @@ export const en = {
     tag: {
       school: 'School',
       personal: 'Personal',
+    },
+  },
+
+  dashboard: {
+    promise: {
+      title: 'See what you need to do today to pass — and turn it into focus blocks.',
+      subtitle: 'Start here and get clarity in 3 quick steps.',
+    },
+    onboarding: {
+      step: 'Step {step}',
+      step1: 'Import your schedule (ICS)',
+      step2: 'Import your block progress (PDF/CSV)',
+      step3: 'Plan your focus block for today',
     },
   },
 

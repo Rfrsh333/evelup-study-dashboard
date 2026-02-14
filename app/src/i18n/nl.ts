@@ -211,6 +211,8 @@ export const nl = {
       debugTotals: 'Parsed: {parsed} · Behouden: {kept} · Weggegooid: {dropped}',
       debugToggle: 'Open debugdetails',
       debugVevents: 'VEVENT aantal: {count}',
+      outOfWindow:
+        'We hebben {count} afspraken gevonden, maar ze vallen buiten je huidige weergave (bijv. in het verleden). Bekijk Weekoverzicht of vergroot je tijdvenster.',
       urlPlaceholder: 'Plak je ICS-URL (optioneel)',
       refresh: 'Vernieuwen',
       refreshing: 'Bezig…',
@@ -326,6 +328,7 @@ export const nl = {
       title: 'Persoonlijk: Planning vandaag',
       cta: 'Importeer agenda',
       empty: 'Geen persoonlijke events vandaag.',
+      viewWeek: 'Bekijk week',
     },
     focusSuggestion: {
       title: 'Focusblok voorstel',
@@ -356,6 +359,19 @@ export const nl = {
     tag: {
       school: 'School',
       personal: 'Persoonlijk',
+    },
+  },
+
+  dashboard: {
+    promise: {
+      title: 'Zie wat je vandaag moet doen om te slagen — en maak er focusblokken van.',
+      subtitle: 'Start hier en krijg snel duidelijkheid in 3 stappen.',
+    },
+    onboarding: {
+      step: 'Stap {step}',
+      step1: 'Importeer je rooster (ICS)',
+      step2: 'Importeer je blokvoortgang (PDF/CSV)',
+      step3: 'Maak je focusblok voor vandaag',
     },
   },
 

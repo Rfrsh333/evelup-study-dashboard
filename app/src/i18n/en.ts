@@ -290,7 +290,7 @@ export const en = {
     subtitle: '{pending} open · {failed} failed · {percent}% passed',
     empty: 'No block progress yet.',
     cta: 'Import Brightspace progress (CSV/PDF)',
-    viewAll: 'View all',
+    viewAll: 'View block overview',
     status: {
       passed: 'Passed',
       failed: 'Not passed',

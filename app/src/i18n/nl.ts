@@ -290,7 +290,7 @@ export const nl = {
     subtitle: '{pending} open · {failed} niet voldaan · {percent}% voldaan',
     empty: 'Nog geen blokvoortgang.',
     cta: 'Importeer Brightspace progress (CSV/PDF)',
-    viewAll: 'Alles bekeken',
+    viewAll: 'Bekijk blokoverzicht',
     status: {
       passed: 'Voldaan',
       failed: 'Niet voldaan',

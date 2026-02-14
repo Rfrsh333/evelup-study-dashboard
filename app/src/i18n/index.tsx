@@ -7,10 +7,7 @@ import { isSupabaseTableMissing } from '@/lib/supabase-errors'
 
 export type Language = 'nl' | 'en'
 
-const translations: Record<Language, any> = {
-  nl,
-  en,
-}
+const translations: Record<Language, any> = { nl, en }
 
 interface I18nContextValue {
   language: Language
@@ -20,12 +17,8 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue | undefined>(undefined)
-
 const STORAGE_KEY = 'levelup-language'
 
-/**
- * Get nested translation value from key path (e.g., 'momentum.title')
- */
 function getNestedValue(obj: any, path: string): string {
   const keys = path.split('.')
   let value = obj
@@ -34,103 +27,136 @@ function getNestedValue(obj: any, path: string): string {
     if (value && typeof value === 'object' && key in value) {
       value = value[key]
     } else {
-      return path // Return key if not found
+      return path
     }
   }
 
   return typeof value === 'string' ? value : path
 }
 
-/**
- * Replace placeholders in translation string
- * Example: "Top {percentile}% this week" with { percentile: 25 } => "Top 25% this week"
- */
 function replacePlaceholders(text: string, params?: Record<string, string | number>): string {
   if (!params) return text
+  return text.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match))
+}
 
-  return text.replace(/\{(\w+)\}/g, (match, key) => {
-    return key in params ? String(params[key]) : match
-  })
+function isValidLanguage(v: any): v is Language {
+  return v === 'nl' || v === 'en'
+}
+
+function loadLocalLanguage(): Language | null {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  return isValidLanguage(stored) ? stored : null
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('nl')
+  const [language, setLanguageState] = useState<Language>(() => loadLocalLanguage() ?? 'nl')
   const [loading, setLoading] = useState(true)
 
-  // Load language preference on mount
   useEffect(() => {
+    let cancelled = false
+
     async function loadLanguage() {
       try {
-        // Try to get from Supabase user profile first
-        if (!isSupabaseConfigured || supabaseStatus.dbUnavailable) {
+        // Always have a usable local fallback immediately
+        const local = loadLocalLanguage()
+        if (local && !cancelled) setLanguageState(local)
+
+        // If Supabase not configured or DB unavailable, we stay in local mode
+        if (!isSupabaseConfigured || supabaseStatus.dbUnavailable) return
+
+        const { data: authData, error: authErr } = await supabase.auth.getUser()
+        if (authErr) throw authErr
+
+        const user = authData?.user
+        if (!user) return
+
+        const defaultLanguage = isValidLanguage(local ?? 'nl') ? (local as Language) : 'nl'
+
+        const { error: upsertError } = await supabase
+          .from('users')
+          .upsert(
+            {
+              id: user.id,
+              email: user.email ?? null,
+              preferred_language: defaultLanguage,
+            },
+            { onConflict: 'id' }
+          )
+
+        if (upsertError) {
+          if (isSupabaseTableMissing(upsertError, 'users')) {
+            setGlobalDbUnavailable(true)
+            return
+          }
+          console.warn('User upsert (non-fatal):', upsertError)
+        }
+
+        // ✅ maybeSingle prevents 406 when the row doesn't exist yet
+        const { data, error } = await supabase
+          .from('users')
+          .select('preferred_language')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (error) {
+          if (isSupabaseTableMissing(error, 'users')) {
+            setGlobalDbUnavailable(true)
+            return
+          }
+          // Non-fatal: row might not exist yet
+          console.warn('Language preference fetch (non-fatal):', error)
           return
         }
 
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (user) {
-          const { data, error } = await supabase
-            .from('users')
-            .select('preferred_language')
-            .eq('id', user.id)
-            .single()
-
-          if (error) {
-            if (isSupabaseTableMissing(error, 'users')) {
-              setGlobalDbUnavailable(true)
-              return
-            }
-            throw error
+        if (data?.preferred_language && isValidLanguage(data.preferred_language)) {
+          if (!cancelled) {
+            setLanguageState(data.preferred_language)
+            localStorage.setItem(STORAGE_KEY, data.preferred_language)
           }
-
-          if (data?.preferred_language) {
-            setLanguageState(data.preferred_language as Language)
-            setLoading(false)
-            return
-          }
-        }
-
-        // Fallback to localStorage
-        const stored = localStorage.getItem(STORAGE_KEY) as Language | null
-        if (stored && (stored === 'nl' || stored === 'en')) {
-          setLanguageState(stored)
         }
       } catch (error) {
         console.error('Error loading language preference:', error)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
     loadLanguage()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  // Set language and persist
   const setLanguage = async (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem(STORAGE_KEY, lang)
 
-    // Try to save to Supabase if authenticated
     try {
       if (!isSupabaseConfigured || supabaseStatus.dbUnavailable) return
 
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: authData, error: authErr } = await supabase.auth.getUser()
+      if (authErr) throw authErr
 
-      if (user) {
-        const { error } = await supabase
-          .from('users')
-          .update({ preferred_language: lang })
-          .eq('id', user.id)
-        if (error && isSupabaseTableMissing(error, 'users')) {
+      const user = authData?.user
+      if (!user) return
+
+      // ✅ upsert ensures the users row exists (fixes "no rows" forever)
+      const { error } = await supabase
+        .from('users')
+        .upsert({ id: user.id, preferred_language: lang }, { onConflict: 'id' })
+
+      if (error) {
+        if (isSupabaseTableMissing(error, 'users')) {
           setGlobalDbUnavailable(true)
+          return
         }
+        console.warn('Error saving language preference (non-fatal):', error)
       }
     } catch (error) {
       console.error('Error saving language preference:', error)
     }
   }
 
-  // Translation function
   const t = (key: string, params?: Record<string, string | number>): string => {
     const translation = getNestedValue(translations[language], key)
     return replacePlaceholders(translation, params)
@@ -162,7 +188,6 @@ export function useI18n() {
   return context
 }
 
-// Shorthand hook for just the t function
 export function useTranslation() {
   const { t, ready } = useI18n()
   return { t, ready }

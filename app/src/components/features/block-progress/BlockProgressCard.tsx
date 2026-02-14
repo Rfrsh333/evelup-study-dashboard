@@ -72,14 +72,25 @@ export function BlockProgressCard() {
           </div>
           {todo.length > 0 && (
             <div className="mt-3 space-y-2">
-              {todo.slice(0, 3).map((assessment) => (
-                <div key={assessment.id} className="flex items-center justify-between text-xs">
+              {todo.slice(0, 3).map((assessment, index) => {
+                const keyBase = [
+                  assessment.id ?? '',
+                  assessment.blockId ?? '',
+                  assessment.course ?? '',
+                  assessment.item ?? '',
+                  assessment.date ? assessment.date.toISOString() : '',
+                  assessment.source ?? '',
+                ].join('|')
+                const key = `${keyBase}|${index}`
+                return (
+                  <div key={key} className="flex items-center justify-between text-xs">
                   <span className="truncate">{assessment.item}</span>
                   <span className="rounded-full bg-muted px-2 py-1 text-[10px] uppercase tracking-wide">
                     {t('blockProgress.status.pending')}
                   </span>
                 </div>
-              ))}
+                )
+              })}
               <button
                 className="text-xs font-medium text-primary"
                 onClick={() =>

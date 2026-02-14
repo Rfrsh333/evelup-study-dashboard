@@ -35,6 +35,7 @@ import { isSupabaseConfigured, setGlobalDbUnavailable, supabaseStatus } from '@/
 import { checkSupabaseHealth } from '@/lib/supabase-health'
 import { calculatePercentile } from '@/domain/percentile'
 import { makeId } from '@/lib/id'
+import { fetchAssessmentsSafe } from '@/lib/assessments'
 
 interface AppStateContextValue {
   // Core state
@@ -198,6 +199,31 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [authLoading, user?.id, dbUnavailable])
+
+  useEffect(() => {
+    if (!user || dbUnavailable || !isSupabaseConfigured || supabaseStatus.dbUnavailable) return
+    let cancelled = false
+    async function loadAssessments() {
+      const assessments = await fetchAssessmentsSafe()
+      if (cancelled || assessments.length === 0) return
+      setState((prev) => {
+        const existing = new Set(
+          prev.assessments.map((assessment) => `${assessment.course}-${assessment.item}`)
+        )
+        const merged = [
+          ...prev.assessments,
+          ...assessments.filter(
+            (assessment) => !existing.has(`${assessment.course}-${assessment.item}`)
+          ),
+        ]
+        return { ...prev, assessments: merged }
+      })
+    }
+    loadAssessments()
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, dbUnavailable])
 
   // Persist state with debouncing (optimistic updates)
   useEffect(() => {

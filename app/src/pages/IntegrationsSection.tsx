@@ -27,6 +27,38 @@ type PdfRow = {
   status: 'passed' | 'failed' | 'pending'
 }
 
+function assessmentKey(assessment: {
+  blockId?: string
+  course: string
+  item: string
+  date?: Date
+}): string {
+  const dateKey = assessment.date ? assessment.date.toISOString() : ''
+  return `${assessment.blockId ?? ''}|${assessment.course}|${assessment.item}|${dateKey}`
+}
+
+function dedupeAssessments<T extends { blockId?: string; course: string; item: string; date?: Date; score: number | null; status: string }>(
+  assessments: T[]
+): T[] {
+  const map = new Map<string, T>()
+  assessments.forEach((assessment) => {
+    const key = assessmentKey(assessment)
+    const existing = map.get(key)
+    if (!existing) {
+      map.set(key, assessment)
+      return
+    }
+    const scoreBoost = assessment.score !== null ? 1 : 0
+    const statusBoost = assessment.status !== 'pending' ? 1 : 0
+    const existingScoreBoost = existing.score !== null ? 1 : 0
+    const existingStatusBoost = existing.status !== 'pending' ? 1 : 0
+    if (scoreBoost + statusBoost >= existingScoreBoost + existingStatusBoost) {
+      map.set(key, assessment)
+    }
+  })
+  return Array.from(map.values())
+}
+
 const ICS_URL_KEY = 'levelup-ics-url'
 const BLOCK_LABEL_KEY = 'levelup-block-label'
 
@@ -71,10 +103,20 @@ export function IntegrationsSection() {
         .select('status')
         .eq('user_id', user.id)
         .eq('provider', 'lti')
-        .single()
+        .maybeSingle()
       if (error && isSupabaseTableMissing(error, 'integrations')) {
         setGlobalDbUnavailable(true)
         return
+      }
+      if (!data) {
+        await supabase.from('integrations').upsert(
+          {
+            user_id: user.id,
+            provider: 'lti',
+            status: 'disconnected',
+          },
+          { onConflict: 'user_id,provider' }
+        )
       }
       if (active && data?.status === 'connected') setLtiStatus('connected')
     }
@@ -156,8 +198,10 @@ export function IntegrationsSection() {
 
     localStorage.setItem(BLOCK_LABEL_KEY, blockLabel)
 
-    const assessments = mapRowsToAssessments(csvRows, csvMapping, blockLabel).filter(
-      (assessment) => assessment.course && assessment.item
+    const assessments = dedupeAssessments(
+      mapRowsToAssessments(csvRows, csvMapping, blockLabel).filter(
+        (assessment) => assessment.course && assessment.item
+      )
     )
     if (assessments.length === 0) {
       setCsvError(t('integrations.csv.parseError'))
@@ -169,7 +213,7 @@ export function IntegrationsSection() {
 
     if (user && !dbUnavailable && !supabaseStatus.dbUnavailable) {
       try {
-        const { error: assessmentError } = await supabase.from('assessments').insert(
+        const { error: assessmentError } = await supabase.from('assessments').upsert(
           assessments.map((assessment) => ({
             user_id: user.id,
             course: assessment.course,
@@ -180,7 +224,8 @@ export function IntegrationsSection() {
             status: assessment.status,
             block_id: assessment.blockId ?? blockLabel,
             source: assessment.source,
-          }))
+          })),
+          { onConflict: 'user_id,block_id,course,item' }
         )
 
         if (assessmentError && isSupabaseTableMissing(assessmentError, 'assessments')) {
@@ -255,24 +300,26 @@ export function IntegrationsSection() {
       (row) => !existing.has(`${row.course ?? 'Course'}-${row.item}`)
     )
 
-    const assessments = uniqueRows.map((row) =>
-      toAssessment(
-        {
-          course: row.course,
-          item: row.item,
-          status: row.status,
-          assessed_at: null,
-          weight: null,
-          score: null,
-        },
-        blockLabel
+    const assessments = dedupeAssessments(
+      uniqueRows.map((row) =>
+        toAssessment(
+          {
+            course: row.course,
+            item: row.item,
+            status: row.status,
+            assessed_at: null,
+            weight: null,
+            score: null,
+          },
+          blockLabel
+        )
       )
     )
 
     assessments.forEach((assessment) => addAssessment(assessment))
 
     if (user && !dbUnavailable && !supabaseStatus.dbUnavailable) {
-      const { error } = await supabase.from('assessments').insert(
+      const { error } = await supabase.from('assessments').upsert(
         assessments.map((assessment) => ({
           user_id: user.id,
           course: assessment.course,
@@ -283,7 +330,8 @@ export function IntegrationsSection() {
           status: assessment.status,
           block_id: assessment.blockId ?? blockLabel,
           source: 'pdf',
-        }))
+        })),
+        { onConflict: 'user_id,block_id,course,item' }
       )
       if (error && isSupabaseTableMissing(error, 'assessments')) {
         setGlobalDbUnavailable(true)

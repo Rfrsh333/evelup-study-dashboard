@@ -176,6 +176,30 @@ export const nl = {
     notificationsDisabled: 'Notificaties uit',
   },
 
+  integrations: {
+    canvas: {
+      title: 'Koppelingen',
+      description: 'Verbind Canvas om opdrachten en cijfers automatisch op te halen.',
+      connect: 'Verbind Canvas',
+      note: 'OAuth loopt via de server; je wachtwoord blijft bij Canvas.',
+    },
+    calendar: {
+      title: 'Importeer agenda',
+      description: 'Importeer deadlines uit je agenda (.ics) in LevelUp.',
+      import: 'Importeer agenda',
+      refreshNote: 'URL-sync volgt later. Upload voorlopig een .ics bestand.',
+    },
+    lti: {
+      title: 'Schoolkoppeling (LTI)',
+      description: 'Voor schoollicenties. Vereist installatie door je instelling.',
+      comingSoon: 'Binnenkort beschikbaar',
+    },
+    status: {
+      connected: 'Verbonden',
+      disconnected: 'Niet verbonden',
+    },
+  },
+
   system: {
     dbLocalMode: {
       title: 'Database nog niet ingesteld. Lokale modus actief.',

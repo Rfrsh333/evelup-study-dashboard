@@ -176,6 +176,30 @@ export const en = {
     notificationsDisabled: 'Notifications off',
   },
 
+  integrations: {
+    canvas: {
+      title: 'Integrations',
+      description: 'Connect Canvas to pull assignments and grades automatically.',
+      connect: 'Connect Canvas',
+      note: 'OAuth runs server-side; your password stays with Canvas.',
+    },
+    calendar: {
+      title: 'Import calendar',
+      description: 'Import deadlines from your calendar (.ics) into LevelUp.',
+      import: 'Import calendar',
+      refreshNote: 'URL sync comes later. Upload a .ics file for now.',
+    },
+    lti: {
+      title: 'School integration (LTI)',
+      description: 'For school licenses. Requires admin installation.',
+      comingSoon: 'Coming soon',
+    },
+    status: {
+      connected: 'Connected',
+      disconnected: 'Not connected',
+    },
+  },
+
   system: {
     dbLocalMode: {
       title: 'Database not configured. Local mode active.',

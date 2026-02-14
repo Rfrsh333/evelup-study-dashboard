@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { useAppState } from '@/app/AppStateProvider'
 import { useAuth } from '@/app/AuthProvider'
 import { SystemBanner } from '@/components/common/SystemBanner'
-import { parseIcs, splitIcsEvents } from '@/integrations/calendar/icsImport'
+import { parseIcs, classifyIcsEvents, type NormalizedIcsEvent } from '@/integrations/calendar/icsImport'
 import { trackEvent } from '@/lib/analytics'
 import { useToast } from '@/components/ui/toast'
 import { setGlobalDbUnavailable, supabase, supabaseStatus } from '@/lib/supabase'
@@ -38,6 +38,11 @@ export function IntegrationsSection() {
   const [icsStatus, setIcsStatus] = useState<string | null>(null)
   const [icsUrl, setIcsUrl] = useState<string>(() => localStorage.getItem(ICS_URL_KEY) ?? '')
   const [icsLoading, setIcsLoading] = useState(false)
+  const [icsPreview, setIcsPreview] = useState<NormalizedIcsEvent[]>([])
+  const [icsError, setIcsError] = useState<string | null>(null)
+  const [icsDebug, setIcsDebug] = useState<{ veventCount: number; previewLines: string[] } | null>(
+    null
+  )
   const [ltiStatus, setLtiStatus] = useState<'connected' | 'disconnected'>('disconnected')
   const [csvText, setCsvText] = useState('')
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
@@ -84,37 +89,22 @@ export function IntegrationsSection() {
   const handleIcsUpload = async (file: File | null) => {
     if (!file) return
     const text = await file.text()
-    const events = parseIcs(text)
-    const { personalEvents, schoolDeadlines } = splitIcsEvents(events)
+    const result = parseIcs(text)
+    setIcsDebug(result.debug)
+    setIcsError(null)
+    setIcsStatus(null)
 
-    const existingPersonal = new Set(
-      state.personalEvents.map((ev) => `${ev.title}-${ev.start.toISOString()}`)
-    )
-    const existingDeadlines = new Set(
-      state.schoolDeadlines.map((dl) => `${dl.title}-${dl.deadline.toISOString()}`)
-    )
+    if (result.error) {
+      setIcsError(t('integrations.calendar.errorNoVevent'))
+      return
+    }
 
-    const nextPersonal = personalEvents.filter(({ uid, event }) => {
-      const key = `${uid}-${event.start.toISOString()}`
-      const fallbackKey = `${event.title}-${event.start.toISOString()}`
-      return !existingPersonal.has(key) && !existingPersonal.has(fallbackKey)
-    })
+    if (result.events.length === 0) {
+      setIcsError(t('integrations.calendar.errorEmpty'))
+      return
+    }
 
-    const nextDeadlines = schoolDeadlines.filter(({ uid, event }) => {
-      const key = `${uid}-${event.deadline.toISOString()}`
-      const fallbackKey = `${event.title}-${event.deadline.toISOString()}`
-      return !existingDeadlines.has(key) && !existingDeadlines.has(fallbackKey)
-    })
-
-    nextPersonal.forEach(({ event }) => addPersonalEvent(event))
-    nextDeadlines.forEach(({ event }) => addSchoolDeadline(event))
-
-    const importedCount = nextPersonal.length + nextDeadlines.length
-    setIcsStatus(t('integrations.calendar.imported', { count: importedCount }))
-    localStorage.setItem('levelup-new-personal-events', String(nextPersonal.length))
-    addToast({ message: t('integrations.calendar.imported', { count: importedCount }) })
-    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
-    void trackEvent('calendar_import')
+    setIcsPreview(result.events)
   }
 
   const handleRequestLti = () => {
@@ -344,6 +334,51 @@ export function IntegrationsSection() {
     }
   }
 
+  const confirmIcsImport = () => {
+    if (icsPreview.length === 0) return
+    const { personalEvents, schoolDeadlines } = classifyIcsEvents(icsPreview)
+
+    const existingPersonal = new Set(
+      state.personalEvents.map((ev) => `${ev.title}-${ev.start.toISOString()}`)
+    )
+    const existingDeadlines = new Set(
+      state.schoolDeadlines.map((dl) => `${dl.title}-${dl.deadline.toISOString()}`)
+    )
+
+    const nextPersonal = personalEvents.filter(({ uid, event }) => {
+      const key = `${uid}-${event.start.toISOString()}`
+      const fallbackKey = `${event.title}-${event.start.toISOString()}`
+      return !existingPersonal.has(key) && !existingPersonal.has(fallbackKey)
+    })
+
+    const nextDeadlines = schoolDeadlines.filter(({ uid, event }) => {
+      const key = `${uid}-${event.deadline.toISOString()}`
+      const fallbackKey = `${event.title}-${event.deadline.toISOString()}`
+      return !existingDeadlines.has(key) && !existingDeadlines.has(fallbackKey)
+    })
+
+    nextPersonal.forEach(({ event }) => addPersonalEvent(event))
+    nextDeadlines.forEach(({ event }) => addSchoolDeadline(event))
+
+    const importedCount = nextPersonal.length + nextDeadlines.length
+    if (importedCount === 0) {
+      setIcsError(t('integrations.calendar.errorEmpty'))
+      setIcsPreview([])
+      return
+    }
+
+    setIcsStatus(t('integrations.calendar.imported', { count: importedCount }))
+    localStorage.setItem('levelup-new-personal-events', String(nextPersonal.length))
+    addToast({ message: t('integrations.calendar.imported', { count: importedCount }) })
+    window.dispatchEvent(
+      new CustomEvent('app:navigate', {
+        detail: { view: 'week', focusTab: nextPersonal.length > 0 ? 'personal' : 'school' },
+      })
+    )
+    setIcsPreview([])
+    void trackEvent('calendar_import')
+  }
+
   const mappingOptions = useMemo(
     () => csvHeaders.map((header) => ({ value: header, label: header })),
     [csvHeaders]
@@ -435,6 +470,55 @@ export function IntegrationsSection() {
           </span>
           {icsStatus && <span className="text-xs text-muted-foreground">{icsStatus}</span>}
         </div>
+        {icsError && (
+          <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+            <div>{icsError}</div>
+            {icsDebug && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs font-medium">
+                  {t('integrations.calendar.debugToggle')}
+                </summary>
+                <div className="mt-2 space-y-1 text-[10px] text-rose-900/80">
+                  <div>{t('integrations.calendar.debugVevents', { count: icsDebug.veventCount })}</div>
+                  <pre className="whitespace-pre-wrap">
+{icsDebug.previewLines.join('\n')}
+                  </pre>
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+        {icsPreview.length > 0 && (
+          <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
+            <div className="text-xs font-medium">
+              {t('integrations.calendar.previewTitle', { count: icsPreview.length })}
+            </div>
+            <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {icsPreview.slice(0, 10).map((event) => (
+                <div key={`${event.uid}-${event.start.toISOString()}`} className="flex justify-between">
+                  <span className="truncate">{event.title}</span>
+                  <span className="text-[10px]">
+                    {event.start.toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                className="rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+                onClick={confirmIcsImport}
+              >
+                {t('integrations.calendar.confirm')}
+              </button>
+              <button
+                className="rounded-md border border-border px-3 py-2 text-xs font-medium"
+                onClick={() => setIcsPreview([])}
+              >
+                {t('integrations.calendar.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
         {icsUrlError && (
           <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             <div className="font-semibold">{t('integrations.calendar.refreshErrorTitle')}</div>

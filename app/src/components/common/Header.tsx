@@ -1,38 +1,97 @@
+import { useState } from 'react'
 import { formatDate, getToday } from '@/lib/dates'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useAppState } from '@/app/AppStateProvider'
+import { useToast } from '@/components/ui/toast'
+import { getLevelTitle } from '@/domain/xp'
 
 interface HeaderProps {
   className?: string
 }
 
 export function Header({ className }: HeaderProps) {
+  const { state, resetAppState, seedDemoData } = useAppState()
+  const { addToast } = useToast()
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+
   const today = getToday()
-  const currentXP = 3450
-  const nextLevelXP = 5000
+  const { level, xpForCurrentLevel, xpForNextLevel } = state.xp
+  const xpProgress = (xpForCurrentLevel / xpForNextLevel) * 100
+  const levelTitle = getLevelTitle(level)
+
+  const handleReset = () => {
+    resetAppState()
+    setResetDialogOpen(false)
+    addToast({ message: 'All data has been reset.' })
+  }
+
+  const handleSeedDemo = () => {
+    seedDemoData()
+    addToast({ message: 'Demo data loaded.' })
+  }
 
   return (
-    <header className={className}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground">{formatDate(today, 'EEEE, MMMM d')}</p>
+    <>
+      <header className={className}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-sm text-muted-foreground">{formatDate(today, 'EEEE, MMMM d')}</p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium">Level 3 – Consistent</p>
-              <p className="text-xs text-muted-foreground">
-                {currentXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP
-              </p>
-            </div>
-            <div className="w-32">
-              <Progress value={currentXP} max={nextLevelXP} className="h-2" />
+            <Button variant="outline" size="sm" onClick={handleSeedDemo}>
+              Seed Demo
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setResetDialogOpen(true)}>
+              Reset Data
+            </Button>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium">
+                  Level {level} – {levelTitle}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {xpForCurrentLevel.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
+                </p>
+              </div>
+              <div className="w-32">
+                <Progress value={xpProgress} max={100} className="h-2" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset all data?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove all study data, XP, streaks, and deadlines.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleReset}>
+              Confirm Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { isUserStateTableMissing } from '@/lib/supabase-errors'
 import { startOfWeek } from 'date-fns'
 
 /**
@@ -10,6 +11,10 @@ import { startOfWeek } from 'date-fns'
  */
 export async function calculatePercentile(userScore: number): Promise<number | undefined> {
   try {
+    if (!isSupabaseConfigured) {
+      return undefined
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -25,7 +30,14 @@ export async function calculatePercentile(userScore: number): Promise<number | u
       .select('state')
       .not('state', 'is', null)
 
-    if (error || !userStates || userStates.length === 0) {
+    if (error) {
+      if (isUserStateTableMissing(error)) {
+        return undefined
+      }
+      return undefined
+    }
+
+    if (!userStates || userStates.length === 0) {
       // If we can't fetch data, return undefined (beta estimate mode)
       return undefined
     }

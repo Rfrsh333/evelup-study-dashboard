@@ -1,10 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
+import App from './App'
+import { Providers } from './app/providers'
+
+if (import.meta.env.DEV) {
+  console.debug('APP_START', performance.now())
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <Providers>
+      <App />
+    </Providers>
+  </StrictMode>
 )

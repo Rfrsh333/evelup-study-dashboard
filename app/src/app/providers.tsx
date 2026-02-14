@@ -10,12 +10,12 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <ToastProvider>
+    <AuthProvider>
       <I18nProvider>
-        <AuthProvider>
-          <AppStateProvider>{children}</AppStateProvider>
-        </AuthProvider>
+        <AppStateProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AppStateProvider>
       </I18nProvider>
-    </ToastProvider>
+    </AuthProvider>
   )
 }

@@ -23,13 +23,15 @@ npm install
 
 1. Create project at [supabase.com](https://supabase.com) (EU region)
 2. Run the SQL schema: `supabase-schema.sql`
-3. Copy `.env.example` to `.env`
+3. Copy `.env.example` to `.env.local`
 4. Add your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+Run `supabase-schema.sql` in the Supabase SQL Editor to create `public.user_state` and related tables.
 
 ### 3. Run Development Server
 ```bash

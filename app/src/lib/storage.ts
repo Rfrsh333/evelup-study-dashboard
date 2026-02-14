@@ -33,6 +33,8 @@ const AssessmentSchema = z.object({
   score: z.number().nullable(),
   weight: z.number().nullable(),
   date: z.coerce.date().optional(),
+  status: z.enum(['passed', 'failed', 'pending']),
+  blockId: z.string().optional(),
   source: z.enum(['csv', 'manual']),
 })
 
@@ -173,6 +175,12 @@ export function loadAppState(): AppState {
     }
     if (!parsed.assessments) {
       parsed.assessments = []
+    }
+    if (Array.isArray(parsed.assessments)) {
+      parsed.assessments = parsed.assessments.map((assessment: any) => ({
+        status: 'pending',
+        ...assessment,
+      }))
     }
     const validated = AppStateSchema.parse(parsed)
 

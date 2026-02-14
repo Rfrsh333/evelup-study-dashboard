@@ -29,6 +29,8 @@ export interface Assessment {
   score: number | null
   weight: number | null
   date?: Date
+  status: 'passed' | 'failed' | 'pending'
+  blockId?: string
   source: 'csv' | 'manual'
 }
 

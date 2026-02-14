@@ -197,6 +197,8 @@ export interface Database {
           score: number | null
           weight: number | null
           assessed_at: string | null
+          status: string
+          block_id: string | null
           source: string
           created_at: string
         }
@@ -208,6 +210,8 @@ export interface Database {
           score?: number | null
           weight?: number | null
           assessed_at?: string | null
+          status?: string
+          block_id?: string | null
           source?: string
           created_at?: string
         }
@@ -219,6 +223,8 @@ export interface Database {
           score?: number | null
           weight?: number | null
           assessed_at?: string | null
+          status?: string
+          block_id?: string | null
           source?: string
           created_at?: string
         }

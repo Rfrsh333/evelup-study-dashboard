@@ -73,6 +73,7 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
       })),
       assessments: state.assessments.map((assessment) => ({
         ...assessment,
+        status: assessment.status ?? 'pending',
         date: assessment.date ? new Date(assessment.date) : undefined,
       })),
       focusSessions: state.focusSessions.map((fs) => ({

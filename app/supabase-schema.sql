@@ -202,6 +202,8 @@ CREATE TABLE IF NOT EXISTS public.assessments (
   score NUMERIC,
   weight NUMERIC,
   assessed_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'pending',
+  block_id TEXT,
   source TEXT NOT NULL DEFAULT 'csv',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -213,8 +215,23 @@ ALTER TABLE IF EXISTS public.assessments
   ADD COLUMN IF NOT EXISTS score NUMERIC,
   ADD COLUMN IF NOT EXISTS weight NUMERIC,
   ADD COLUMN IF NOT EXISTS assessed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS block_id TEXT,
   ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'csv',
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'assessments_status_check'
+  ) THEN
+    ALTER TABLE public.assessments
+      ADD CONSTRAINT assessments_status_check
+      CHECK (status IN ('passed', 'failed', 'pending'));
+  END IF;
+END $$;
 
 ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
 
@@ -477,6 +494,12 @@ CREATE INDEX IF NOT EXISTS idx_assessments_user_id
 
 CREATE INDEX IF NOT EXISTS idx_assessments_user_course
   ON public.assessments(user_id, course);
+
+CREATE INDEX IF NOT EXISTS idx_assessments_user_block
+  ON public.assessments(user_id, block_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_assessments_user_block_item
+  ON public.assessments(user_id, block_id, course, item);
 
 CREATE INDEX IF NOT EXISTS idx_lti_launches_user_id
   ON public.lti_launches(user_id);

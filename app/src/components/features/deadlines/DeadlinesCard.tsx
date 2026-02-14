@@ -8,7 +8,7 @@ export function DeadlinesCard() {
   const { state } = useAppState()
 
   // Filter active deadlines (not completed or failed) and sort by deadline
-  const activeDeadlines = state.deadlines
+  const activeDeadlines = state.schoolDeadlines
     .filter((dl) => dl.status === 'on-track' || dl.status === 'at-risk')
     .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
     .slice(0, 5) // Show max 5 deadlines
@@ -46,6 +46,8 @@ export function DeadlinesCard() {
                   <span>{timeUntil}</span>
                   <span className="text-xs">•</span>
                   <span>{deadline.xp} XP</span>
+                  <span className="text-xs">•</span>
+                  <span>{deadline.source === 'lti' ? 'LTI' : 'School'}</span>
                 </div>
               </div>
               <Badge

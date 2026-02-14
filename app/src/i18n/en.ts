@@ -203,6 +203,12 @@ export const en = {
       cancel: 'Cancel',
       errorNoVevent: 'No appointments found in this file. BEGIN:VEVENT is missing.',
       errorEmpty: 'No appointments found in this file.',
+      errorParse: 'We found events but could not parse them.',
+      errorOutOfWindow:
+        'We found {count} events, but they’re outside the selected time window (all in the past or too far ahead).',
+      window: 'Window: {start} to {end}',
+      includeRecent: 'Include past 14 days',
+      debugTotals: 'Parsed: {parsed} · Kept: {kept} · Dropped: {dropped}',
       debugToggle: 'Open debug details',
       debugVevents: 'VEVENT count: {count}',
       urlPlaceholder: 'Paste your ICS URL (optional)',

@@ -81,11 +81,14 @@ async function handleLaunch(req: Request): Promise<Response> {
   await supabase.from('users').upsert(userPayload)
 
   if (context?.id) {
-    await supabase.from('courses').upsert({
-      user_id: userId,
-      lti_context_id: context.id,
-      title: context.title ?? 'Course',
-    })
+    await supabase.from('courses').upsert(
+      {
+        user_id: userId,
+        lti_context_id: context.id,
+        title: context.title ?? 'Course',
+      },
+      { onConflict: 'user_id,lti_context_id' }
+    )
   }
 
   await supabase.from('lti_launches').insert({

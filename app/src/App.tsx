@@ -7,6 +7,7 @@ import { AuthPage } from './pages/AuthPage'
 import { LoadingScreen } from './components/common/LoadingScreen'
 import { InsightsPage } from './pages/InsightsPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { WeekPage } from './pages/WeekPage'
 import type { AppView } from './components/common/Sidebar'
 import { trackEvent } from './lib/analytics'
 import { useTranslation } from './i18n'
@@ -28,6 +29,15 @@ function App() {
   }, [authLoading, stateLoading])
 
   useTrackAppOpen(Boolean(user) && !authLoading)
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ view: AppView }>).detail
+      if (detail?.view) setCurrentView(detail.view)
+    }
+    window.addEventListener('app:navigate', handler)
+    return () => window.removeEventListener('app:navigate', handler)
+  }, [])
 
   // Show loading screen while checking auth
   if (authLoading || stateLoading) {
@@ -54,6 +64,7 @@ function App() {
     <Layout currentView={currentView} onNavigate={setCurrentView}>
       {notices.length > 0 && <NoticeBanner messages={notices} />}
       {currentView === 'dashboard' && <DashboardPage />}
+      {currentView === 'week' && <WeekPage />}
       {currentView === 'insights' && (isAdmin ? <InsightsPage /> : <AccessDenied message={t('insights.adminOnly')} />)}
       {currentView === 'settings' && <SettingsPage />}
     </Layout>

@@ -1,6 +1,6 @@
 import { startOfWeek, endOfWeek, subWeeks } from 'date-fns'
 import type {
-  Deadline,
+  SchoolDeadline,
   FocusSession,
   StudyLog,
   MomentumScore,
@@ -40,7 +40,7 @@ export function calculateConsistency(studyLogs: StudyLog[], weekStart?: Date): n
  * Calculate deadline control score (0-100) based on on-track deadlines
  * Percentage of active deadlines that are on-track
  */
-export function calculateDeadlineControl(deadlines: Deadline[]): number {
+export function calculateDeadlineControl(deadlines: SchoolDeadline[]): number {
   const activeDeadlines = deadlines.filter(
     (d) => d.status === 'on-track' || d.status === 'at-risk'
   )
@@ -83,7 +83,7 @@ export function calculateStreakBonus(currentStreak: number): number {
 export function getWeeklyData(
   studyLogs: StudyLog[],
   focusSessions: FocusSession[],
-  deadlines: Deadline[],
+  deadlines: SchoolDeadline[],
   weekStart: Date
 ): WeeklyData {
   const end = endOfWeek(weekStart, { weekStartsOn: 1 })
@@ -116,7 +116,7 @@ export function getWeeklyData(
 export function calculateWeeklyTrend(
   studyLogs: StudyLog[],
   focusSessions: FocusSession[],
-  deadlines: Deadline[],
+  deadlines: SchoolDeadline[],
   currentStreak: number
 ): MomentumTrend {
   const thisWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
@@ -160,7 +160,7 @@ export function calculateWeeklyTrend(
 function calculateMomentumScoreRaw(
   studyLogs: StudyLog[],
   focusSessions: FocusSession[],
-  deadlines: Deadline[],
+  deadlines: SchoolDeadline[],
   currentStreak: number,
   weekStart?: Date
 ): number {
@@ -183,7 +183,7 @@ function calculateMomentumScoreRaw(
 export function calculateMomentumScore(
   studyLogs: StudyLog[],
   focusSessions: FocusSession[],
-  deadlines: Deadline[],
+  deadlines: SchoolDeadline[],
   currentStreak: number
 ): MomentumScore {
   const consistency = calculateConsistency(studyLogs)

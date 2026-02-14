@@ -1,4 +1,5 @@
 import type { PersonalEvent, SchoolDeadline } from '@/domain/types'
+import ICAL from 'ical.js'
 
 export interface NormalizedIcsEvent {
   uid: string
@@ -12,8 +13,9 @@ export interface NormalizedIcsEvent {
 }
 
 export type IcsParseError = {
-  kind: 'NO_VEVENT'
+  kind: 'NO_VEVENT' | 'PARSE_FAILURE'
   message: string
+  details?: string[]
 }
 
 export type IcsParseResult = {
@@ -22,6 +24,13 @@ export type IcsParseResult = {
   debug: {
     veventCount: number
     previewLines: string[]
+    veventSamples: string[]
+    parsedTotal: number
+    keptTotal: number
+    pastDroppedCount: number
+    outOfRangeCount: number
+    windowStart: string
+    windowEnd: string
   }
 }
 
@@ -38,137 +47,129 @@ const DEADLINE_KEYWORDS = [
   'submission',
 ]
 
-function unfoldLines(input: string): string[] {
-  const normalized = input.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-  const rawLines = normalized.split('\n')
-  const lines: string[] = []
+function getRawVeventSamples(text: string, max = 2): string[] {
+  const lines = text.replace(/\r\n/g, '\n').split('\n')
+  const samples: string[] = []
+  let buffer: string[] = []
+  let inEvent = false
 
-  for (const line of rawLines) {
-    if (line.startsWith(' ') || line.startsWith('\t')) {
-      const prev = lines.pop() ?? ''
-      lines.push(prev + line.slice(1))
-    } else {
-      lines.push(line)
+  for (const line of lines) {
+    if (line.startsWith('BEGIN:VEVENT')) {
+      inEvent = true
+      buffer = [line]
+      continue
     }
+    if (line.startsWith('END:VEVENT')) {
+      if (inEvent) {
+        buffer.push(line)
+        samples.push(buffer.slice(0, 30).join('\n'))
+      }
+      inEvent = false
+      buffer = []
+      if (samples.length >= max) break
+      continue
+    }
+    if (inEvent) buffer.push(line)
   }
 
-  return lines
+  return samples
 }
 
-function parseDateTime(value: string, hasTimeZone: boolean): Date | null {
-  if (!value) return null
-  if (value.length === 8) {
-    const year = Number(value.slice(0, 4))
-    const month = Number(value.slice(4, 6)) - 1
-    const day = Number(value.slice(6, 8))
-    return new Date(year, month, day, 0, 0, 0)
-  }
-
-  const datePart = value.slice(0, 8)
-  const timePart = value.slice(9, 15)
-  const year = Number(datePart.slice(0, 4))
-  const month = Number(datePart.slice(4, 6)) - 1
-  const day = Number(datePart.slice(6, 8))
-  const hour = Number(timePart.slice(0, 2))
-  const minute = Number(timePart.slice(2, 4))
-  const second = Number(timePart.slice(4, 6))
-
-  if (hasTimeZone) {
-    return new Date(Date.UTC(year, month, day, hour, minute, second))
-  }
-  return new Date(year, month, day, hour, minute, second)
-}
-
-function parseDateField(rawKey: string, rawValue: string): { date: Date | null; allDay: boolean } {
-  const value = rawValue.trim()
-  const isUtc = value.endsWith('Z')
-  const keyParts = rawKey.split(';')
-  const tzSpecified = keyParts.some((part) => part.startsWith('TZID='))
-
-  if (value.length === 8) {
-    return { date: parseDateTime(value, false), allDay: true }
-  }
-
-  const cleaned = isUtc ? value.slice(0, -1) : value
-  const date = parseDateTime(cleaned, isUtc ? true : !tzSpecified ? false : false)
-  return { date, allDay: false }
-}
-
-function getField(line: string): { key: string; value: string } | null {
-  const splitIndex = line.indexOf(':')
-  if (splitIndex === -1) return null
-  const key = line.slice(0, splitIndex)
-  const value = line.slice(splitIndex + 1)
-  return { key, value }
+function getTitle(summary?: string | null, description?: string | null): string {
+  const title = summary?.trim() || description?.trim()
+  return title && title.length > 0 ? title : 'Afspraak'
 }
 
 export function parseIcs(text: string): IcsParseResult {
-  const lines = unfoldLines(text).filter((line) => line.trim().length > 0)
-  const previewLines = lines.slice(0, 30)
-  const events: NormalizedIcsEvent[] = []
-  let veventCount = 0
+  const now = new Date()
+  const windowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)
+  const previewLines = text.replace(/\r\n/g, '\n').split('\n').slice(0, 30)
+  const veventSamples = getRawVeventSamples(text)
+  const parseErrors: string[] = []
 
-  let current: Partial<NormalizedIcsEvent> & {
-    rawStart?: { date: Date; allDay: boolean }
-    rawEnd?: { date: Date; allDay: boolean }
-  } = {}
-
-  for (const line of lines) {
-    if (line === 'BEGIN:VEVENT') {
-      veventCount += 1
-      current = {}
-      continue
-    }
-    if (line === 'END:VEVENT') {
-      if (current.uid && current.title && current.rawStart?.date) {
-        const start = current.rawStart.date
-        const allDay = current.rawStart.allDay
-        let end = current.rawEnd?.date
-        if (!end) {
-          if (allDay) {
-            end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
-          } else {
-            end = new Date(start.getTime() + 60 * 60 * 1000)
-          }
-        }
-
-        events.push({
-          uid: current.uid,
-          title: current.title,
-          start,
-          end,
-          allDay,
-          description: current.description,
-          location: current.location,
-          rawSource: 'ics',
-        })
-      }
-      current = {}
-      continue
-    }
-
-    if (Object.keys(current).length === 0 && !line.startsWith('UID') && !line.startsWith('SUMMARY')) {
-      continue
-    }
-
-    const field = getField(line)
-    if (!field) continue
-
-    const baseKey = field.key.split(';')[0]
-    if (baseKey === 'UID') current.uid = field.value.trim()
-    if (baseKey === 'SUMMARY') current.title = field.value.trim()
-    if (baseKey === 'DESCRIPTION') current.description = field.value.trim()
-    if (baseKey === 'LOCATION') current.location = field.value.trim()
-
-    if (baseKey === 'DTSTART') {
-      const parsed = parseDateField(field.key, field.value)
-      if (parsed.date) current.rawStart = { date: parsed.date, allDay: parsed.allDay }
-    }
-    if (baseKey === 'DTEND') {
-      const parsed = parseDateField(field.key, field.value)
-      if (parsed.date) current.rawEnd = { date: parsed.date, allDay: parsed.allDay }
+  let component: ICAL.Component
+  try {
+    const jcal = ICAL.parse(text)
+    component = new ICAL.Component(jcal)
+  } catch (error) {
+    return {
+      events: [],
+      error: {
+        kind: 'PARSE_FAILURE',
+        message: 'ICS parsing failed.',
+        details: [String(error)],
+      },
+      debug: {
+        veventCount: 0,
+        previewLines,
+        veventSamples,
+        parsedTotal: 0,
+        keptTotal: 0,
+        pastDroppedCount: 0,
+        outOfRangeCount: 0,
+        windowStart: windowStart.toISOString(),
+        windowEnd: windowEnd.toISOString(),
+      },
     }
   }
+
+  const vevents = component.getAllSubcomponents('vevent')
+  const veventCount = vevents.length
+  const events: NormalizedIcsEvent[] = []
+
+  vevents.forEach((vevent) => {
+    try {
+      const uidValue = vevent.getFirstPropertyValue('uid')
+      const uid = typeof uidValue === 'string' ? uidValue : crypto.randomUUID()
+      const summary = vevent.getFirstPropertyValue('summary')
+      const description = vevent.getFirstPropertyValue('description')
+      const location = vevent.getFirstPropertyValue('location')
+      const summaryText = typeof summary === 'string' ? summary : null
+      const descriptionText = typeof description === 'string' ? description : null
+      const locationText = typeof location === 'string' ? location : null
+      const dtstart = vevent.getFirstPropertyValue('dtstart') as ICAL.Time | null
+      const dtend = vevent.getFirstPropertyValue('dtend') as ICAL.Time | null
+
+      if (!dtstart) {
+        parseErrors.push(`Missing DTSTART for ${uid}`)
+        return
+      }
+
+      const start = dtstart.toJSDate()
+      if (Number.isNaN(start.getTime())) {
+        parseErrors.push(`Invalid DTSTART for ${uid}`)
+        return
+      }
+
+      const allDay = dtstart.isDate
+
+      let end: Date | null = null
+      if (dtend) {
+        const endDate = dtend.toJSDate()
+        if (!Number.isNaN(endDate.getTime())) end = endDate
+      }
+
+      if (!end) {
+        end = allDay
+          ? new Date(start.getTime() + 24 * 60 * 60 * 1000)
+          : new Date(start.getTime() + 60 * 60 * 1000)
+      }
+
+      events.push({
+        uid,
+        title: getTitle(summaryText, descriptionText),
+        start,
+        end,
+        allDay,
+        description: descriptionText ?? undefined,
+        location: locationText ?? undefined,
+        rawSource: 'ics',
+      })
+    } catch (error) {
+      parseErrors.push(String(error))
+    }
+  })
 
   if (veventCount === 0) {
     return {
@@ -177,11 +178,71 @@ export function parseIcs(text: string): IcsParseResult {
         kind: 'NO_VEVENT',
         message: 'No VEVENT blocks found in ICS file.',
       },
-      debug: { veventCount, previewLines },
+      debug: {
+        veventCount,
+        previewLines,
+        veventSamples,
+        parsedTotal: events.length,
+        keptTotal: 0,
+        pastDroppedCount: 0,
+        outOfRangeCount: 0,
+        windowStart: windowStart.toISOString(),
+        windowEnd: windowEnd.toISOString(),
+      },
     }
   }
 
-  return { events, debug: { veventCount, previewLines } }
+  const parsedTotal = events.length
+  let pastDroppedCount = 0
+  let outOfRangeCount = 0
+  const filtered = events.filter((event) => {
+    if (event.start < windowStart) {
+      pastDroppedCount += 1
+      return false
+    }
+    if (event.start > windowEnd) {
+      outOfRangeCount += 1
+      return false
+    }
+    return true
+  })
+
+  if (filtered.length === 0) {
+    return {
+      events: [],
+      error: {
+        kind: 'PARSE_FAILURE',
+        message: 'VEVENTs found but no valid events parsed.',
+        details: parseErrors,
+      },
+      debug: {
+        veventCount,
+        previewLines,
+        veventSamples,
+        parsedTotal,
+        keptTotal: 0,
+        pastDroppedCount,
+        outOfRangeCount,
+        windowStart: windowStart.toISOString(),
+        windowEnd: windowEnd.toISOString(),
+      },
+    }
+  }
+
+  return {
+    events: filtered,
+    debug: {
+      veventCount,
+      previewLines,
+      veventSamples,
+      parsedTotal,
+      keptTotal: filtered.length,
+      pastDroppedCount,
+      outOfRangeCount,
+      windowStart: windowStart.toISOString(),
+      windowEnd: windowEnd.toISOString(),
+    },
+  }
 }
 
 function hasDeadlineKeyword(text: string): boolean {
@@ -233,15 +294,18 @@ export function classifyIcsEvents(events: NormalizedIcsEvent[]): {
   return { personalEvents, schoolDeadlines }
 }
 
-export function debugParseSampleIcs(): IcsParseResult {
+export function debugHvaSample(): IcsParseResult {
   const sample = [
     'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Brussels',
+    'END:VTIMEZONE',
     'BEGIN:VEVENT',
-    'UID:sample-1',
-    'SUMMARY:S0 - Inleveropdracht',
-    'DTSTART;TZID=Europe/Amsterdam:20260216T090000',
-    'DTEND;TZID=Europe/Amsterdam:20260216T100000',
-    'DESCRIPTION:Deadline voor opdracht',
+    'UID:hva-1',
+    'SUMMARY:Rooster blok',
+    'DTSTART;TZID=Europe/Brussels:20260216T090000',
+    'DTEND;TZID=Europe/Brussels:20260216T100000',
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\n')

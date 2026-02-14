@@ -203,6 +203,12 @@ export const nl = {
       cancel: 'Annuleren',
       errorNoVevent: 'Geen afspraken gevonden in dit bestand. BEGIN:VEVENT ontbreekt.',
       errorEmpty: 'Geen afspraken gevonden in dit bestand.',
+      errorParse: 'We vonden afspraken maar konden ze niet parsen.',
+      errorOutOfWindow:
+        'We vonden {count} afspraken, maar ze vallen buiten je ingestelde periode (alles is al voorbij of te ver in de toekomst).',
+      window: 'Periode: {start} tot {end}',
+      includeRecent: 'Afgelopen 14 dagen meenemen',
+      debugTotals: 'Parsed: {parsed} · Behouden: {kept} · Weggegooid: {dropped}',
       debugToggle: 'Open debugdetails',
       debugVevents: 'VEVENT aantal: {count}',
       urlPlaceholder: 'Plak je ICS-URL (optioneel)',

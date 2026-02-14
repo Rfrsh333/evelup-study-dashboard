@@ -1,7 +1,6 @@
 export type IntegrationStatus = 'connected' | 'disconnected' | 'error' | 'pending'
 
 export type Provider =
-  | 'canvas'
   | 'calendar'
   | 'lti'
 

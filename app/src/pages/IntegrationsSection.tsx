@@ -72,9 +72,18 @@ export function IntegrationsSection() {
   const [icsLoading, setIcsLoading] = useState(false)
   const [icsPreview, setIcsPreview] = useState<NormalizedIcsEvent[]>([])
   const [icsError, setIcsError] = useState<string | null>(null)
-  const [icsDebug, setIcsDebug] = useState<{ veventCount: number; previewLines: string[] } | null>(
-    null
-  )
+  const [icsDebug, setIcsDebug] = useState<{
+    veventCount: number
+    previewLines: string[]
+    veventSamples: string[]
+    parsedTotal: number
+    keptTotal: number
+    pastDroppedCount: number
+    outOfRangeCount: number
+    windowStart: string
+    windowEnd: string
+  } | null>(null)
+  const [includeRecent, setIncludeRecent] = useState(true)
   const [ltiStatus, setLtiStatus] = useState<'connected' | 'disconnected'>('disconnected')
   const [csvText, setCsvText] = useState('')
   const [csvHeaders, setCsvHeaders] = useState<string[]>([])
@@ -137,12 +146,25 @@ export function IntegrationsSection() {
     setIcsStatus(null)
 
     if (result.error) {
-      setIcsError(t('integrations.calendar.errorNoVevent'))
+      if (result.error.kind === 'NO_VEVENT') {
+        setIcsError(t('integrations.calendar.errorNoVevent'))
+      } else {
+        setIcsError(t('integrations.calendar.errorParse'))
+      }
+      setIcsDebug({ ...result.debug })
       return
     }
 
     if (result.events.length === 0) {
-      setIcsError(t('integrations.calendar.errorEmpty'))
+      if (result.debug.parsedTotal > 0 && result.debug.keptTotal === 0) {
+        setIcsError(
+          t('integrations.calendar.errorOutOfWindow', {
+            count: result.debug.parsedTotal,
+          })
+        )
+      } else {
+        setIcsError(t('integrations.calendar.errorEmpty'))
+      }
       return
     }
 
@@ -384,7 +406,11 @@ export function IntegrationsSection() {
 
   const confirmIcsImport = () => {
     if (icsPreview.length === 0) return
-    const { personalEvents, schoolDeadlines } = classifyIcsEvents(icsPreview)
+    const filteredPreview = includeRecent ? icsPreview : icsPreview.filter((event) => {
+      const now = new Date()
+      return event.start >= now
+    })
+    const { personalEvents, schoolDeadlines } = classifyIcsEvents(filteredPreview)
 
     const existingPersonal = new Set(
       state.personalEvents.map((ev) => `${ev.title}-${ev.start.toISOString()}`)
@@ -521,6 +547,14 @@ export function IntegrationsSection() {
         {icsError && (
           <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-900">
             <div>{icsError}</div>
+            {icsDebug && icsDebug.parsedTotal > 0 && icsDebug.keptTotal === 0 && (
+              <div className="mt-1 text-[10px] text-rose-900/80">
+                {t('integrations.calendar.window', {
+                  start: new Date(icsDebug.windowStart).toLocaleDateString(),
+                  end: new Date(icsDebug.windowEnd).toLocaleDateString(),
+                })}
+              </div>
+            )}
             {icsDebug && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-xs font-medium">
@@ -528,6 +562,18 @@ export function IntegrationsSection() {
                 </summary>
                 <div className="mt-2 space-y-1 text-[10px] text-rose-900/80">
                   <div>{t('integrations.calendar.debugVevents', { count: icsDebug.veventCount })}</div>
+                  <div>
+                    {t('integrations.calendar.debugTotals', {
+                      parsed: icsDebug.parsedTotal,
+                      kept: icsDebug.keptTotal,
+                      dropped: icsDebug.pastDroppedCount + icsDebug.outOfRangeCount,
+                    })}
+                  </div>
+                  {icsDebug.veventSamples.length > 0 && (
+                    <pre className="whitespace-pre-wrap">
+{icsDebug.veventSamples.join('\n\n')}
+                    </pre>
+                  )}
                   <pre className="whitespace-pre-wrap">
 {icsDebug.previewLines.join('\n')}
                   </pre>
@@ -541,6 +587,14 @@ export function IntegrationsSection() {
             <div className="text-xs font-medium">
               {t('integrations.calendar.previewTitle', { count: icsPreview.length })}
             </div>
+            <label className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={includeRecent}
+                onChange={(event) => setIncludeRecent(event.target.checked)}
+              />
+              {t('integrations.calendar.includeRecent')}
+            </label>
             <div className="mt-2 space-y-1 text-xs text-muted-foreground">
               {icsPreview.slice(0, 10).map((event) => (
                 <div key={`${event.uid}-${event.start.toISOString()}`} className="flex justify-between">

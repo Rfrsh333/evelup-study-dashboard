@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CardShell } from '@/components/common/CardShell'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
+import { useAppState } from '@/app/AppStateProvider'
 import {
   getExistingSubscription,
   loadLocalSubscription,
@@ -19,6 +20,7 @@ export function SettingsPage() {
   const [enabled, setEnabled] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
+  const { state, updatePreferences } = useAppState()
 
   const canEnable = useMemo(() => 'Notification' in window && 'serviceWorker' in navigator, [])
 
@@ -122,6 +124,42 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <IntegrationsSection />
+
+      <CardShell title={t('settings.focusWindow')}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div>
+            <label className="text-xs text-muted-foreground">{t('settings.from')}</label>
+            <input
+              type="time"
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              value={state.preferences.preferredFocusStart}
+              onChange={(event) => updatePreferences({ preferredFocusStart: event.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">{t('settings.to')}</label>
+            <input
+              type="time"
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              value={state.preferences.preferredFocusEnd}
+              onChange={(event) => updatePreferences({ preferredFocusEnd: event.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">{t('settings.focusMinutes')}</label>
+            <select
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              value={state.preferences.preferredFocusMinutes}
+              onChange={(event) =>
+                updatePreferences({ preferredFocusMinutes: Number(event.target.value) })
+              }
+            >
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+            </select>
+          </div>
+        </div>
+      </CardShell>
 
       <CardShell title={t('settings.notifications')}>
         <div className="flex flex-col gap-4">

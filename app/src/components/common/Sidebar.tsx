@@ -1,7 +1,7 @@
 import { BarChart3, Settings, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type AppView = 'dashboard' | 'insights' | 'settings'
+export type AppView = 'dashboard' | 'week' | 'insights' | 'settings'
 
 interface SidebarProps {
   className?: string
@@ -12,6 +12,7 @@ interface SidebarProps {
 export function Sidebar({ className, currentView, onNavigate }: SidebarProps) {
   const navItems = [
     { icon: BarChart3, label: 'Dashboard', view: 'dashboard', disabled: false },
+    { icon: TrendingUp, label: 'Week', view: 'week', disabled: false },
     { icon: TrendingUp, label: 'Insights', view: 'insights', disabled: false },
     { icon: Settings, label: 'Settings', view: 'settings', disabled: false },
   ] as const

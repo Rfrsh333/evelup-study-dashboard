@@ -13,9 +13,11 @@ export function AppShell({ children, currentView, onNavigate }: AppShellProps) {
   const viewLabel =
     currentView === 'dashboard'
       ? 'Dashboard'
-      : currentView === 'insights'
-        ? 'Insights'
-        : 'Settings'
+      : currentView === 'week'
+        ? 'Week'
+        : currentView === 'insights'
+          ? 'Insights'
+          : 'Settings'
 
   return (
     <div className="min-h-screen bg-background">

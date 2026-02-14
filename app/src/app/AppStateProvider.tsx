@@ -15,6 +15,7 @@ import {
 } from '@/domain/daily-objectives'
 import { startOfWeek, endOfWeek } from 'date-fns'
 import { generateDemoData } from '@/lib/demo-data'
+import { trackEvent } from '@/lib/analytics'
 
 interface AppStateContextValue {
   // Core state
@@ -228,6 +229,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       ...prev,
       deadlines: [...prev.deadlines, newDeadline],
     }))
+    trackEvent('deadline_added', { title: deadline.title })
   }, [])
 
   const updateDeadline = useCallback((id: string, updates: Partial<Deadline>) => {
@@ -243,7 +245,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       // Award XP for completing deadline
       const { newState: newXP, leveledUp } = awardXP(prev.xp, XP_REWARDS.DEADLINE_COMPLETED)
-      if (leveledUp) setLevelUpTriggered(true)
+      if (leveledUp) {
+        setLevelUpTriggered(true)
+        trackEvent('level_up', { new_level: newXP.level })
+      }
+
+      trackEvent('deadline_completed', { deadline_id: id })
 
       return {
         ...prev,
@@ -277,7 +284,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       // Award XP for completing focus session
       const { newState: newXP, leveledUp } = awardXP(prev.xp, XP_REWARDS.FOCUS_SESSION)
-      if (leveledUp) setLevelUpTriggered(true)
+      if (leveledUp) {
+        setLevelUpTriggered(true)
+        trackEvent('level_up', { new_level: newXP.level })
+      }
+
+      trackEvent('focus_completed')
 
       return {
         ...prev,
@@ -321,6 +333,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetAppState = useCallback(async () => {
+    trackEvent('data_reset')
     if (isAuthenticated) {
       await clearAppStateFromSupabase()
     } else {
@@ -331,6 +344,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated])
 
   const seedDemoData = useCallback(() => {
+    trackEvent('demo_data_loaded')
     const { deadlines, focusSessions, studyLogs } = generateDemoData()
 
     // Calculate total XP from demo data
@@ -372,11 +386,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       let newXP = prev.xp
       let bonusAwarded = prev.dailyObjectives.bonusXPAwarded
 
+      trackEvent('daily_objective_completed', { objective_id: objectiveId })
+
       if (allCompleted && !bonusAwarded) {
         const { newState, leveledUp } = awardXP(prev.xp, DAILY_OBJECTIVES_BONUS_XP)
         newXP = newState
         bonusAwarded = true
-        if (leveledUp) setLevelUpTriggered(true)
+        if (leveledUp) {
+          setLevelUpTriggered(true)
+          trackEvent('level_up', { new_level: newXP.level })
+        }
+        trackEvent('all_daily_objectives_completed')
       }
 
       return {

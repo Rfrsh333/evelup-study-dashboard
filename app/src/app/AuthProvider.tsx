@@ -41,10 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+      if (!error && data.user) {
+        // Track login event
+        await supabase.from('events').insert({
+          user_id: data.user.id,
+          event_type: 'login',
+          timestamp: new Date().toISOString(),
+        })
+      }
       return { error }
     } catch (error) {
       return { error: error as Error }

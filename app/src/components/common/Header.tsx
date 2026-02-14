@@ -18,9 +18,10 @@ import { LogOut } from 'lucide-react'
 
 interface HeaderProps {
   className?: string
+  currentView?: string
 }
 
-export function Header({ className }: HeaderProps) {
+export function Header({ className, currentView }: HeaderProps) {
   const { state, resetAppState, seedDemoData } = useAppState()
   const { signOut } = useAuth()
   const { addToast } = useToast()
@@ -50,6 +51,11 @@ export function Header({ className }: HeaderProps) {
             <div>
               <p className="text-sm text-muted-foreground">{formatDate(today, 'EEEE, MMMM d')}</p>
             </div>
+            {currentView && (
+              <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                {currentView}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-4">

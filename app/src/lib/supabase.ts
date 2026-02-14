@@ -19,6 +19,19 @@ if (!isSupabaseConfigured) {
   console.warn('Supabase credentials missing or invalid. Running in local mode.')
 }
 
+export const supabaseStatus = {
+  dbUnavailable: false,
+}
+
+export function setGlobalDbUnavailable(value: boolean) {
+  supabaseStatus.dbUnavailable = value
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('supabase:dbUnavailable', { detail: { value } })
+    )
+  }
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -97,6 +110,35 @@ export interface Database {
           user_id?: string
           type?: string
           metadata?: any
+          created_at?: string
+        }
+      }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth: string
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          endpoint?: string
+          p256dh?: string
+          auth?: string
+          user_agent?: string | null
           created_at?: string
         }
       }

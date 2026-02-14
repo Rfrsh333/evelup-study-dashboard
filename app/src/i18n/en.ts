@@ -170,12 +170,16 @@ export const en = {
     notifications: 'Notifications',
     resetData: 'Reset data',
     confirmReset: 'Are you sure you want to delete all data?',
+    pushCopy: 'Get a reminder at your focus moment.',
+    pushNoSpam: 'No spam. 1–2/day.',
+    notificationsEnabled: 'Notifications on',
+    notificationsDisabled: 'Notifications off',
   },
 
   system: {
     dbLocalMode: {
-      title: 'Database not configured. App is running in local mode.',
-      subtitle: 'Run supabase-schema.sql in Supabase SQL Editor.',
+      title: 'Database not configured. Local mode active.',
+      subtitle: 'Run supabase-schema.sql in Supabase → SQL Editor.',
     },
   },
 } as const

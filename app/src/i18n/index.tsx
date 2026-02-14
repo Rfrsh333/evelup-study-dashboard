@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { nl } from './nl'
 import { en } from './en'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured, setGlobalDbUnavailable, supabaseStatus } from '@/lib/supabase'
+import { isSupabaseTableMissing } from '@/lib/supabase-errors'
 
 export type Language = 'nl' | 'en'
 
@@ -61,18 +62,26 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     async function loadLanguage() {
       try {
         // Try to get from Supabase user profile first
-        if (!isSupabaseConfigured) {
+        if (!isSupabaseConfigured || supabaseStatus.dbUnavailable) {
           return
         }
 
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user) {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('users')
             .select('preferred_language')
             .eq('id', user.id)
             .single()
+
+          if (error) {
+            if (isSupabaseTableMissing(error, 'users')) {
+              setGlobalDbUnavailable(true)
+              return
+            }
+            throw error
+          }
 
           if (data?.preferred_language) {
             setLanguageState(data.preferred_language as Language)
@@ -103,15 +112,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
     // Try to save to Supabase if authenticated
     try {
-      if (!isSupabaseConfigured) return
+      if (!isSupabaseConfigured || supabaseStatus.dbUnavailable) return
 
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        await supabase
+        const { error } = await supabase
           .from('users')
           .update({ preferred_language: lang })
           .eq('id', user.id)
+        if (error && isSupabaseTableMissing(error, 'users')) {
+          setGlobalDbUnavailable(true)
+        }
       }
     } catch (error) {
       console.error('Error saving language preference:', error)
@@ -137,7 +149,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useI18n() {
   const context = useContext(I18nContext)
   if (!context) {
-    throw new Error('useI18n must be used within I18nProvider')
+    if (import.meta.env.DEV) {
+      throw new Error('useI18n must be used within I18nProvider')
+    }
+    return {
+      language: 'nl' as Language,
+      setLanguage: () => {},
+      t: (key: string) => key,
+      ready: true,
+    }
   }
   return context
 }

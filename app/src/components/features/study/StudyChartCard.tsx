@@ -43,7 +43,7 @@ export function StudyChartCard() {
 
   return (
     <CardShell title="Study Time - Last 7 Days">
-      <div className="h-64">
+      <div className="h-64 w-full min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={last7Days} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

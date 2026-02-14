@@ -1,7 +1,13 @@
-import { supabase } from './supabase'
+import { supabase, setGlobalDbUnavailable, supabaseStatus } from './supabase'
+import { isSupabaseTableMissing } from './supabase-errors'
 
 export type EventType =
   | 'login'
+  | 'app_open'
+  | 'push_opt_in'
+  | 'push_opt_out'
+  | 'push_permission_denied'
+  | 'push_sent'
   | 'focus_started'
   | 'focus_completed'
   | 'deadline_added'
@@ -33,12 +39,18 @@ export async function trackEvent(
       return
     }
 
-    await supabase.from('events').insert({
+    if (supabaseStatus.dbUnavailable) return
+
+    const { error } = await supabase.from('events').insert({
       user_id: user.id,
       type: eventType,
       metadata,
       created_at: new Date().toISOString(),
     })
+    if (error && isSupabaseTableMissing(error, 'events')) {
+      setGlobalDbUnavailable(true)
+      return
+    }
   } catch (error) {
     // Fail silently - don't block user actions due to analytics errors
     console.error('Analytics error:', error)
@@ -56,11 +68,18 @@ export async function getEventCount(eventType: EventType): Promise<number> {
 
     if (!user) return 0
 
-    const { count } = await supabase
+    if (supabaseStatus.dbUnavailable) return 0
+
+    const { count, error } = await supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('type', eventType)
+
+    if (error && isSupabaseTableMissing(error, 'events')) {
+      setGlobalDbUnavailable(true)
+      return 0
+    }
 
     return count || 0
   } catch (error) {

@@ -22,7 +22,7 @@ npm install
 ### 2. Set Up Supabase
 
 1. Create project at [supabase.com](https://supabase.com) (EU region)
-2. Run the SQL schema: `supabase-schema.sql`
+2. Run `supabase-schema.sql` in the Supabase **SQL Editor**
 3. Copy `.env.example` to `.env.local`
 4. Add your Supabase credentials:
 
@@ -32,6 +32,19 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 Run `supabase-schema.sql` in the Supabase SQL Editor to create `public.user_state` and related tables.
+
+### Push Notifications (PWA)
+1. Generate VAPID keys (server-side only).
+2. Add the public key to `.env.local`:
+```env
+VITE_VAPID_PUBLIC_KEY=your_public_vapid_key
+```
+3. Deploy the Edge Function in `supabase/functions/send-daily-reminders`.
+4. Add secrets to the function:
+   - `VAPID_PUBLIC_KEY`
+   - `VAPID_PRIVATE_KEY`
+   - `VAPID_SUBJECT`
+5. Schedule the function (Supabase cron or external cron).
 
 ### 3. Run Development Server
 ```bash

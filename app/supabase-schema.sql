@@ -27,6 +27,10 @@ CREATE POLICY IF NOT EXISTS "Users can view own data"
   ON public.users FOR SELECT
   USING (auth.uid() = id);
 
+CREATE POLICY IF NOT EXISTS "Users can insert own data"
+  ON public.users FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 CREATE POLICY IF NOT EXISTS "Users can update own data"
   ON public.users FOR UPDATE
   USING (auth.uid() = id);
@@ -98,6 +102,40 @@ CREATE POLICY IF NOT EXISTS "Users can view own events"
   ON public.events FOR SELECT
   USING (auth.uid() = user_id);
 
+-- Push subscriptions (web push)
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, endpoint)
+);
+
+ALTER TABLE IF EXISTS public.push_subscriptions
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS endpoint TEXT,
+  ADD COLUMN IF NOT EXISTS p256dh TEXT,
+  ADD COLUMN IF NOT EXISTS auth TEXT,
+  ADD COLUMN IF NOT EXISTS user_agent TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own push subscriptions"
+  ON public.push_subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own push subscriptions"
+  ON public.push_subscriptions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can delete own push subscriptions"
+  ON public.push_subscriptions FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_state_user_id
   ON public.user_state(user_id);
@@ -110,6 +148,9 @@ CREATE INDEX IF NOT EXISTS idx_events_user_id_created_at
 
 CREATE INDEX IF NOT EXISTS idx_events_type
   ON public.events(type);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id
+  ON public.push_subscriptions(user_id);
 
 -- Function to automatically create user record on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()

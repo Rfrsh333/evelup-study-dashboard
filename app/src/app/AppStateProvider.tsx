@@ -23,7 +23,7 @@ import { generateDemoData } from '@/lib/demo-data'
 import { trackEvent } from '@/lib/analytics'
 import { useAuth } from './AuthProvider'
 import { SupabaseTableMissingError } from '@/lib/supabase-errors'
-import { isSupabaseConfigured } from '@/lib/supabase'
+import { isSupabaseConfigured, setGlobalDbUnavailable } from '@/lib/supabase'
 import { calculatePercentile } from '@/domain/percentile'
 
 interface AppStateContextValue {
@@ -68,6 +68,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const { user, loading: authLoading } = useAuth()
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ value: boolean }>).detail
+      if (detail?.value !== undefined) {
+        setDbUnavailable(detail.value)
+      }
+    }
+    window.addEventListener('supabase:dbUnavailable', handler)
+    return () => window.removeEventListener('supabase:dbUnavailable', handler)
+  }, [])
+
   // Load initial state based on auth status
   useEffect(() => {
     if (authLoading) return
@@ -76,8 +87,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const loadInitialState = async () => {
       setPersistReady(false)
 
+      if (dbUnavailable) {
+        try {
+          const localState = loadAppState()
+          if (!cancelled) setState(localState)
+        } catch (error) {
+          if (!cancelled) {
+            console.error('Error loading local state:', error)
+            setState(getDefaultAppState())
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+            setPersistReady(true)
+          }
+        }
+        return
+      }
+
       if (!isSupabaseConfigured) {
         setDbUnavailable(true)
+        setGlobalDbUnavailable(true)
         setIsAuthenticated(false)
         try {
           const localState = loadAppState()
@@ -97,6 +127,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
 
       setDbUnavailable(false)
+      setGlobalDbUnavailable(false)
 
       if (user) {
         setIsAuthenticated(true)
@@ -109,6 +140,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           if (!cancelled) {
             if (error instanceof SupabaseTableMissingError) {
               setDbUnavailable(true)
+              setGlobalDbUnavailable(true)
               const localState = loadAppState()
               setState(localState)
             } else {
@@ -144,7 +176,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [authLoading, user?.id])
+  }, [authLoading, user?.id, dbUnavailable])
 
   // Persist state with debouncing (optimistic updates)
   useEffect(() => {
@@ -163,6 +195,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           if (error instanceof SupabaseTableMissingError) {
             setDbUnavailable(true)
+            setGlobalDbUnavailable(true)
             saveAppState(state) // Fallback to localStorage
             return
           }
@@ -464,6 +497,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (error instanceof SupabaseTableMissingError) {
           setDbUnavailable(true)
+          setGlobalDbUnavailable(true)
         }
       }
     } else {

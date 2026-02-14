@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react'
 import { AppShell } from '@/components/common/AppShell'
-import { Providers } from './providers'
+import type { AppView } from '@/components/common/Sidebar'
 
 interface LayoutProps {
   children: ReactNode
+  currentView: AppView
+  onNavigate: (view: AppView) => void
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   return (
-    <Providers>
-      <AppShell>{children}</AppShell>
-    </Providers>
+    <AppShell currentView={currentView} onNavigate={onNavigate}>
+      {children}
+    </AppShell>
   )
 }

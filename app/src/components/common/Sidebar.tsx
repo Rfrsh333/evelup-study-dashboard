@@ -1,16 +1,20 @@
 import { BarChart3, Settings, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+export type AppView = 'dashboard' | 'insights' | 'settings'
+
 interface SidebarProps {
   className?: string
+  currentView: AppView
+  onNavigate: (view: AppView) => void
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, currentView, onNavigate }: SidebarProps) {
   const navItems = [
-    { icon: BarChart3, label: 'Dashboard', active: true, disabled: false },
-    { icon: TrendingUp, label: 'Insights', active: false, disabled: true },
-    { icon: Settings, label: 'Settings', active: false, disabled: true },
-  ]
+    { icon: BarChart3, label: 'Dashboard', view: 'dashboard', disabled: false },
+    { icon: TrendingUp, label: 'Insights', view: 'insights', disabled: false },
+    { icon: Settings, label: 'Settings', view: 'settings', disabled: false },
+  ] as const
 
   return (
     <aside
@@ -29,9 +33,10 @@ export function Sidebar({ className }: SidebarProps) {
             <button
               key={item.label}
               disabled={item.disabled}
+              onClick={() => onNavigate(item.view)}
               className={cn(
                 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                item.active
+                currentView === item.view
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 item.disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'

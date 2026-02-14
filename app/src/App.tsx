@@ -1,15 +1,20 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './app/AuthProvider'
 import { useAppState } from './app/AppStateProvider'
 import { Layout } from './app/layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { AuthPage } from './pages/AuthPage'
 import { LoadingScreen } from './components/common/LoadingScreen'
+import { InsightsPage } from './pages/InsightsPage'
+import { SettingsPage } from './pages/SettingsPage'
+import type { AppView } from './components/common/Sidebar'
+import { trackEvent } from './lib/analytics'
 
 function App() {
   const { user, loading: authLoading, error: authError } = useAuth()
   const { loading: stateLoading } = useAppState()
   const firstRenderLogged = useRef(false)
+  const [currentView, setCurrentView] = useState<AppView>('dashboard')
 
   useEffect(() => {
     if (authLoading || stateLoading) return
@@ -19,6 +24,8 @@ function App() {
       console.debug('FIRST_RENDER', performance.now())
     }
   }, [authLoading, stateLoading])
+
+  useTrackAppOpen(Boolean(user) && !authLoading)
 
   // Show loading screen while checking auth
   if (authLoading || stateLoading) {
@@ -40,14 +47,25 @@ function App() {
 
   // Show dashboard if logged in
   return (
-    <Layout>
+    <Layout currentView={currentView} onNavigate={setCurrentView}>
       {notices.length > 0 && <NoticeBanner messages={notices} />}
-      <DashboardPage />
+      {currentView === 'dashboard' && <DashboardPage />}
+      {currentView === 'insights' && <InsightsPage />}
+      {currentView === 'settings' && <SettingsPage />}
     </Layout>
   )
 }
 
 export default App
+
+function useTrackAppOpen(ready: boolean) {
+  const tracked = useRef(false)
+  useEffect(() => {
+    if (!ready || tracked.current) return
+    tracked.current = true
+    void trackEvent('app_open')
+  }, [ready])
+}
 
 function NoticeBanner({ messages }: { messages: string[] }) {
   return (

@@ -170,12 +170,16 @@ export const nl = {
     notifications: 'Notificaties',
     resetData: 'Gegevens resetten',
     confirmReset: 'Weet je zeker dat je alle gegevens wilt verwijderen?',
+    pushCopy: 'Krijg een reminder op je focus-moment.',
+    pushNoSpam: 'Geen spam. 1–2 per dag.',
+    notificationsEnabled: 'Notificaties aan',
+    notificationsDisabled: 'Notificaties uit',
   },
 
   system: {
     dbLocalMode: {
-      title: 'Database nog niet ingesteld. App draait tijdelijk in lokale modus.',
-      subtitle: 'Voer supabase-schema.sql uit in Supabase SQL Editor.',
+      title: 'Database nog niet ingesteld. Lokale modus actief.',
+      subtitle: 'Run supabase-schema.sql in Supabase → SQL Editor.',
     },
   },
 } as const

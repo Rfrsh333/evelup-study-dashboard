@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured, setGlobalDbUnavailable, supabaseStatus } from '@/lib/supabase'
+import { isSupabaseTableMissing } from '@/lib/supabase-errors'
 import type { User, Session } from '@supabase/supabase-js'
 
 interface AuthContextValue {
@@ -91,13 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
       })
-      if (!error && data.user) {
+      if (!error && data.user && !supabaseStatus.dbUnavailable) {
         // Track login event
-        await supabase.from('events').insert({
+        const { error: eventError } = await supabase.from('events').insert({
           user_id: data.user.id,
           type: 'login',
           created_at: new Date().toISOString(),
         })
+        if (eventError && isSupabaseTableMissing(eventError, 'events')) {
+          setGlobalDbUnavailable(true)
+        }
       }
       return { error }
     } catch (error) {

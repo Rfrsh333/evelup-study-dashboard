@@ -174,20 +174,63 @@ export const en = {
     pushNoSpam: 'No spam. 1–2/day.',
     notificationsEnabled: 'Notifications on',
     notificationsDisabled: 'Notifications off',
+    focusWindow: 'Preferred focus window',
+    focusMinutes: 'Focus duration (min)',
   },
 
   integrations: {
-    canvas: {
-      title: 'Integrations',
-      description: 'Connect Canvas to pull assignments and grades automatically.',
-      connect: 'Connect Canvas',
-      note: 'OAuth runs server-side; your password stays with Canvas.',
+    header: 'Integrations',
+    explainer: 'Brightspace syncs deadlines and grades. Calendar import adds upcoming deadlines.',
+    onboarding: {
+      title: 'Brightspace import (beta)',
+      subtitle: 'Import deadlines (ICS) and grades (CSV) in two quick steps.',
+      step: 'Step {step}',
+    },
+    brightspace: {
+      title: 'Brightspace',
+      description: 'Brightspace integration via school license.',
+      connect: 'Request your school to activate LevelUp',
+      note: 'OAuth runs server-side; your password stays with Brightspace.',
     },
     calendar: {
-      title: 'Import calendar',
+      title: 'Calendar import',
       description: 'Import deadlines from your calendar (.ics) into LevelUp.',
       import: 'Import calendar',
-      refreshNote: 'URL sync comes later. Upload a .ics file for now.',
+      refreshNote: 'Tip: add an ICS URL for quick refresh.',
+      imported: '{count} items imported',
+      urlPlaceholder: 'Paste your ICS URL (optional)',
+      refresh: 'Refresh',
+      refreshing: 'Refreshing…',
+      refreshError: 'We could not fetch the ICS feed (CORS or network issue).',
+      refreshErrorTitle: 'Calendar URL blocked',
+      refreshSuccess: 'Calendar refreshed',
+      uploadCta: 'Upload .ics file',
+      needsManual: 'Manual upload needed. Keep the URL saved and upload a file when blocked.',
+    },
+    csv: {
+      title: 'Grades CSV',
+      description: 'Import your Brightspace grades with a CSV export.',
+      upload: 'Upload CSV',
+      import: 'Import grades',
+      preview: 'Preview import',
+      previewTitle: 'Preview',
+      previewStats: '{rows} rows · {courses} courses',
+      previewSummary: 'Example: {course} · predicted {predicted} · required {required}',
+      confirm: 'Confirm import',
+      back: 'Back',
+      rows: '{count} rows detected',
+      waiting: 'Waiting for CSV',
+      imported: '{count} grades imported',
+      pastePlaceholder: 'Paste CSV here…',
+      parseError: 'Unable to read CSV. Please check the file format.',
+      mapping: {
+        course: 'Course column',
+        item: 'Item column',
+        score: 'Score column',
+        weight: 'Weight column',
+        date: 'Date column',
+        optional: 'Optional',
+      },
     },
     lti: {
       title: 'School integration (LTI)',
@@ -197,7 +240,9 @@ export const en = {
     status: {
       connected: 'Connected',
       disconnected: 'Not connected',
+      localMode: 'Local mode',
     },
+    ltiRequested: 'We will contact your school IT.',
   },
 
   insights: {
@@ -207,6 +252,58 @@ export const en = {
     w1Title: 'W1 retention',
     w1Subtitle: 'Last 8 cohorts',
     adminOnly: 'Insights are limited to admins.',
+  },
+
+  grades: {
+    title: 'Grades',
+    predicted: 'Predicted final',
+    required: 'Required remaining average',
+    placeholder: 'Connect Brightspace to see predictions.',
+    empty: 'No grades found yet.',
+    cta: 'Connect Brightspace',
+  },
+
+  today: {
+    school: {
+      title: 'School: priorities',
+      cta: 'Go to deadlines overview',
+      empty: 'No urgent school deadlines within 72h.',
+    },
+    personal: {
+      title: 'Personal: today plan',
+      cta: 'Import calendar',
+      empty: 'No personal events today.',
+    },
+    focusSuggestion: {
+      title: 'Suggested focus block',
+      body: 'You have a free slot at {time}. Schedule {minutes} min focus.',
+      reason: {
+        preferred: 'Fits your routine (after class).',
+        deadline: 'Before your next deadline.',
+        gap: 'Largest free slot today.',
+      },
+      cta: {
+        schedule: 'Schedule focus block',
+        otherTime: 'Pick another time',
+      },
+      empty: 'No free slot found. Plan manually.',
+      focusTitle: 'Focus block ({minutes} min)',
+    },
+  },
+
+  week: {
+    filter: {
+      school: 'School',
+      personal: 'Personal',
+    },
+    schoolTitle: 'School deadlines',
+    personalTitle: 'Personal events',
+    emptySchool: 'No school deadlines yet.',
+    emptyPersonal: 'No personal events yet.',
+    tag: {
+      school: 'School',
+      personal: 'Personal',
+    },
   },
 
   system: {

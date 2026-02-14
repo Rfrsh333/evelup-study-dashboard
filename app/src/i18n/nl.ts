@@ -174,20 +174,63 @@ export const nl = {
     pushNoSpam: 'Geen spam. 1–2 per dag.',
     notificationsEnabled: 'Notificaties aan',
     notificationsDisabled: 'Notificaties uit',
+    focusWindow: 'Voorkeursfocusblok',
+    focusMinutes: 'Focusduur (min)',
   },
 
   integrations: {
-    canvas: {
-      title: 'Koppelingen',
-      description: 'Verbind Canvas om opdrachten en cijfers automatisch op te halen.',
-      connect: 'Verbind Canvas',
-      note: 'OAuth loopt via de server; je wachtwoord blijft bij Canvas.',
+    header: 'Koppelingen',
+    explainer: 'Brightspace synchroniseert deadlines en cijfers. Agenda-import voegt deadlines toe.',
+    onboarding: {
+      title: 'Brightspace import (beta)',
+      subtitle: 'Importeer deadlines (ICS) en cijfers (CSV) in twee snelle stappen.',
+      step: 'Stap {step}',
+    },
+    brightspace: {
+      title: 'Brightspace',
+      description: 'Brightspace koppeling via schoollicentie.',
+      connect: 'Vraag jouw opleiding om LevelUp te activeren',
+      note: 'OAuth loopt via de server; je wachtwoord blijft bij Brightspace.',
     },
     calendar: {
-      title: 'Importeer agenda',
+      title: 'Agenda import',
       description: 'Importeer deadlines uit je agenda (.ics) in LevelUp.',
       import: 'Importeer agenda',
-      refreshNote: 'URL-sync volgt later. Upload voorlopig een .ics bestand.',
+      refreshNote: 'Tip: voeg een ICS-URL toe om snel te refreshen.',
+      imported: '{count} items geïmporteerd',
+      urlPlaceholder: 'Plak je ICS-URL (optioneel)',
+      refresh: 'Vernieuwen',
+      refreshing: 'Bezig…',
+      refreshError: 'ICS-feed kon niet worden opgehaald (CORS of netwerkfout).',
+      refreshErrorTitle: 'Agenda-URL geblokkeerd',
+      refreshSuccess: 'Agenda vernieuwd',
+      uploadCta: 'Upload .ics bestand',
+      needsManual: 'Handmatige upload nodig. Laat de URL staan en upload een bestand.',
+    },
+    csv: {
+      title: 'Cijfers CSV',
+      description: 'Importeer je Brightspace-cijfers via een CSV-export.',
+      upload: 'Upload CSV',
+      import: 'Importeer cijfers',
+      preview: 'Preview import',
+      previewTitle: 'Voorbeeld',
+      previewStats: '{rows} rijen · {courses} vakken',
+      previewSummary: 'Voorbeeld: {course} · verwacht {predicted} · nodig {required}',
+      confirm: 'Import bevestigen',
+      back: 'Terug',
+      rows: '{count} rijen gevonden',
+      waiting: 'Wachten op CSV',
+      imported: '{count} cijfers geïmporteerd',
+      pastePlaceholder: 'Plak CSV hier…',
+      parseError: 'CSV kon niet worden gelezen. Controleer het formaat.',
+      mapping: {
+        course: 'Vak-kolom',
+        item: 'Item-kolom',
+        score: 'Cijfer-kolom',
+        weight: 'Weging-kolom',
+        date: 'Datum-kolom',
+        optional: 'Optioneel',
+      },
     },
     lti: {
       title: 'Schoolkoppeling (LTI)',
@@ -197,7 +240,9 @@ export const nl = {
     status: {
       connected: 'Verbonden',
       disconnected: 'Niet verbonden',
+      localMode: 'Lokale modus',
     },
+    ltiRequested: 'We nemen contact op met jouw opleiding.',
   },
 
   insights: {
@@ -207,6 +252,58 @@ export const nl = {
     w1Title: 'W1 retentie',
     w1Subtitle: 'Laatste 8 cohorts',
     adminOnly: 'Insights zijn alleen voor admins.',
+  },
+
+  grades: {
+    title: 'Cijfers',
+    predicted: 'Verwacht eindcijfer',
+    required: 'Benodigde gemiddelde',
+    placeholder: 'Verbind Brightspace om voorspellingen te zien.',
+    empty: 'Geen cijfers gevonden.',
+    cta: 'Koppel Brightspace',
+  },
+
+  today: {
+    school: {
+      title: 'School: Prioriteiten',
+      cta: 'Ga naar Deadlines overzicht',
+      empty: 'Geen urgente schooldeadlines binnen 72u.',
+    },
+    personal: {
+      title: 'Persoonlijk: Planning vandaag',
+      cta: 'Importeer agenda',
+      empty: 'Geen persoonlijke events vandaag.',
+    },
+    focusSuggestion: {
+      title: 'Focusblok voorstel',
+      body: 'Je hebt een vrij blok om {time}. Plan {minutes} min focus.',
+      reason: {
+        preferred: 'Past in je ritme (na college).',
+        deadline: 'Voor je eerstvolgende deadline.',
+        gap: 'Grootste vrije blok vandaag.',
+      },
+      cta: {
+        schedule: 'Plan focusblok',
+        otherTime: 'Andere tijd',
+      },
+      empty: 'Geen vrij blok gevonden. Plan handmatig.',
+      focusTitle: 'Focusblok ({minutes} min)',
+    },
+  },
+
+  week: {
+    filter: {
+      school: 'School',
+      personal: 'Persoonlijk',
+    },
+    schoolTitle: 'Schooldeadlines',
+    personalTitle: 'Persoonlijke events',
+    emptySchool: 'Nog geen schooldeadlines.',
+    emptyPersonal: 'Nog geen persoonlijke events.',
+    tag: {
+      school: 'School',
+      personal: 'Persoonlijk',
+    },
   },
 
   system: {

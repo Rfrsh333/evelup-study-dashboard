@@ -163,6 +163,43 @@ CREATE POLICY IF NOT EXISTS "Users can delete own calendar sources"
   ON public.calendar_sources FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Assessments (CSV import)
+CREATE TABLE IF NOT EXISTS public.assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  course TEXT NOT NULL,
+  item TEXT NOT NULL,
+  score NUMERIC,
+  weight NUMERIC,
+  assessed_at TIMESTAMPTZ,
+  source TEXT NOT NULL DEFAULT 'csv',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.assessments
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS course TEXT,
+  ADD COLUMN IF NOT EXISTS item TEXT,
+  ADD COLUMN IF NOT EXISTS score NUMERIC,
+  ADD COLUMN IF NOT EXISTS weight NUMERIC,
+  ADD COLUMN IF NOT EXISTS assessed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'csv',
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own assessments"
+  ON public.assessments FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own assessments"
+  ON public.assessments FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own assessments"
+  ON public.assessments FOR UPDATE
+  USING (auth.uid() = user_id);
+
 -- LMS deadlines
 CREATE TABLE IF NOT EXISTS public.deadlines (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -362,11 +399,20 @@ CREATE INDEX IF NOT EXISTS idx_integrations_user_id
 CREATE INDEX IF NOT EXISTS idx_calendar_sources_user_id
   ON public.calendar_sources(user_id);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_calendar_sources_user_url
+  ON public.calendar_sources(user_id, ics_url);
+
 CREATE INDEX IF NOT EXISTS idx_deadlines_user_id
   ON public.deadlines(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_grades_user_id
   ON public.grades(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_assessments_user_id
+  ON public.assessments(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_assessments_user_course
+  ON public.assessments(user_id, course);
 
 CREATE INDEX IF NOT EXISTS idx_lti_launches_user_id
   ON public.lti_launches(user_id);
@@ -383,7 +429,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_courses_user_context
 CREATE INDEX IF NOT EXISTS idx_deadlines_user_course
   ON public.deadlines(user_id, course_id);
 
-CREATE INDEX IF NOT EXISTS idx_grades_user_course
+CREATE UNIQUE INDEX IF NOT EXISTS idx_grades_user_course_unique
   ON public.grades(user_id, course_id);
 
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id

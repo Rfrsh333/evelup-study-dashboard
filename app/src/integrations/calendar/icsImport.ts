@@ -1,9 +1,10 @@
-import type { Deadline } from '@/domain/types'
+import type { PersonalEvent, SchoolDeadline } from '@/domain/types'
 
 export interface IcsEvent {
   uid: string
   summary: string
   start: Date
+  end?: Date
 }
 
 function parseDate(value: string): Date | null {
@@ -52,16 +53,63 @@ export function parseIcs(text: string): IcsEvent[] {
       const date = parseDate(value)
       if (date) current.start = date
     }
+    if (key.startsWith('DTEND')) {
+      const date = parseDate(value)
+      if (date) current.end = date
+    }
   }
 
   return events
 }
 
-export function eventsToDeadlines(events: IcsEvent[]): Omit<Deadline, 'id' | 'createdAt'>[] {
-  return events.map((event) => ({
-    title: event.summary,
-    deadline: event.start,
-    status: 'on-track',
-    xp: 10,
-  }))
+const DEADLINE_KEYWORDS = [
+  'deadline',
+  'due',
+  'assignment',
+  'opdracht',
+  'inlever',
+  'quiz',
+  'exam',
+  'tentamen',
+  'toets',
+]
+
+function isDeadlineTitle(title: string): boolean {
+  const normalized = title.toLowerCase()
+  return DEADLINE_KEYWORDS.some((keyword) => normalized.includes(keyword))
+}
+
+export function splitIcsEvents(events: IcsEvent[]): {
+  personalEvents: { uid: string; event: Omit<PersonalEvent, 'id'> }[]
+  schoolDeadlines: { uid: string; event: Omit<SchoolDeadline, 'id' | 'createdAt'> }[]
+} {
+  const personalEvents: { uid: string; event: Omit<PersonalEvent, 'id'> }[] = []
+  const schoolDeadlines: { uid: string; event: Omit<SchoolDeadline, 'id' | 'createdAt'> }[] = []
+
+  events.forEach((event) => {
+    if (isDeadlineTitle(event.summary)) {
+      schoolDeadlines.push({
+        uid: event.uid,
+        event: {
+          title: event.summary,
+          deadline: event.start,
+          status: 'on-track',
+          xp: 50,
+          source: 'manual',
+        },
+      })
+      return
+    }
+    personalEvents.push({
+      uid: event.uid,
+      event: {
+        title: event.summary,
+        start: event.start,
+        end: event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000),
+        source: 'ics',
+      },
+    })
+  })
+
+  return { personalEvents, schoolDeadlines }
 }

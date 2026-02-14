@@ -1,7 +1,15 @@
 import { supabase, setGlobalDbUnavailable, supabaseStatus } from '@/lib/supabase'
 import { isSupabaseTableMissing } from '@/lib/supabase-errors'
 
-const REQUIRED_TABLES = ['users', 'user_state', 'events', 'integrations', 'deadlines', 'grades']
+const REQUIRED_TABLES = [
+  'users',
+  'user_state',
+  'events',
+  'integrations',
+  'deadlines',
+  'grades',
+  'assessments',
+]
 let healthcheckPromise: Promise<boolean> | null = null
 
 export function checkSupabaseHealth(): Promise<boolean> {

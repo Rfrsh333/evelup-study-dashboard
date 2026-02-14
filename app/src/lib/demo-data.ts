@@ -1,18 +1,20 @@
 import { subDays, startOfDay, addHours } from 'date-fns'
-import type { Deadline, FocusSession, StudyLog } from '@/domain/types'
+import type { SchoolDeadline, FocusSession, StudyLog, PersonalEvent, Assessment } from '@/domain/types'
 
 /**
  * Generate realistic demo data for development and testing
  */
 export function generateDemoData(): {
-  deadlines: Deadline[]
+  schoolDeadlines: SchoolDeadline[]
+  personalEvents: PersonalEvent[]
+  assessments: Assessment[]
   focusSessions: FocusSession[]
   studyLogs: StudyLog[]
 } {
   const now = new Date()
 
   // Generate 5 deadlines with mixed statuses
-  const deadlines: Deadline[] = [
+  const schoolDeadlines: SchoolDeadline[] = [
     {
       id: 'demo-dl-1',
       title: 'Complete Linear Algebra Problem Set 3',
@@ -20,6 +22,7 @@ export function generateDemoData(): {
       status: 'on-track',
       xp: 250,
       createdAt: subDays(now, 5),
+      source: 'manual',
     },
     {
       id: 'demo-dl-2',
@@ -28,6 +31,7 @@ export function generateDemoData(): {
       status: 'on-track',
       xp: 400,
       createdAt: subDays(now, 7),
+      source: 'manual',
     },
     {
       id: 'demo-dl-3',
@@ -36,6 +40,7 @@ export function generateDemoData(): {
       status: 'at-risk',
       xp: 350,
       createdAt: subDays(now, 4),
+      source: 'manual',
     },
     {
       id: 'demo-dl-4',
@@ -44,6 +49,7 @@ export function generateDemoData(): {
       status: 'on-track',
       xp: 500,
       createdAt: subDays(now, 10),
+      source: 'manual',
     },
     {
       id: 'demo-dl-5',
@@ -53,6 +59,24 @@ export function generateDemoData(): {
       xp: 300,
       createdAt: subDays(now, 14),
       completedAt: subDays(now, 3),
+      source: 'manual',
+    },
+  ]
+
+  const personalEvents: PersonalEvent[] = [
+    {
+      id: 'demo-pe-1',
+      title: 'Werkcollege',
+      start: addHours(startOfDay(now), 9),
+      end: addHours(startOfDay(now), 10),
+      source: 'manual',
+    },
+    {
+      id: 'demo-pe-2',
+      title: 'Boodschappen',
+      start: addHours(startOfDay(now), 18),
+      end: addHours(startOfDay(now), 19),
+      source: 'manual',
     },
   ]
 
@@ -79,7 +103,9 @@ export function generateDemoData(): {
   ]
 
   return {
-    deadlines,
+    schoolDeadlines,
+    personalEvents,
+    assessments: [],
     focusSessions,
     studyLogs,
   }

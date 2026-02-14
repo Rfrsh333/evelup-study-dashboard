@@ -6,7 +6,7 @@ const STORAGE_KEY = 'levelup-app-state'
 const CURRENT_VERSION = 1
 
 // Zod schemas for validation
-const DeadlineSchema = z.object({
+const SchoolDeadlineSchema = z.object({
   id: z.string(),
   title: z.string(),
   deadline: z.coerce.date(),
@@ -14,6 +14,26 @@ const DeadlineSchema = z.object({
   xp: z.number(),
   createdAt: z.coerce.date(),
   completedAt: z.coerce.date().optional(),
+  source: z.enum(['lti', 'manual']),
+})
+
+const PersonalEventSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  start: z.coerce.date(),
+  end: z.coerce.date(),
+  source: z.enum(['ics', 'manual']),
+  tag: z.enum(['focus_block']).optional(),
+})
+
+const AssessmentSchema = z.object({
+  id: z.string(),
+  course: z.string(),
+  item: z.string(),
+  score: z.number().nullable(),
+  weight: z.number().nullable(),
+  date: z.coerce.date().optional(),
+  source: z.enum(['csv', 'manual']),
 })
 
 const FocusSessionSchema = z.object({
@@ -78,10 +98,15 @@ const UserPreferencesSchema = z.object({
   studyWindowStart: z.string(),
   studyWindowEnd: z.string(),
   language: z.enum(['nl', 'en']),
+  preferredFocusStart: z.string(),
+  preferredFocusEnd: z.string(),
+  preferredFocusMinutes: z.number(),
 })
 
 const AppStateSchema = z.object({
-  deadlines: z.array(DeadlineSchema),
+  schoolDeadlines: z.array(SchoolDeadlineSchema),
+  personalEvents: z.array(PersonalEventSchema),
+  assessments: z.array(AssessmentSchema),
   focusSessions: z.array(FocusSessionSchema),
   studyLogs: z.array(StudyLogSchema),
   xp: XPStateSchema,
@@ -96,7 +121,9 @@ const AppStateSchema = z.object({
 // Default initial state
 export function getDefaultAppState(): AppState {
   return {
-    deadlines: [],
+    schoolDeadlines: [],
+    personalEvents: [],
+    assessments: [],
     focusSessions: [],
     studyLogs: [],
     xp: {
@@ -116,6 +143,9 @@ export function getDefaultAppState(): AppState {
       studyWindowStart: '16:00',
       studyWindowEnd: '18:00',
       language: 'nl',
+      preferredFocusStart: '16:00',
+      preferredFocusEnd: '18:00',
+      preferredFocusMinutes: 25,
     },
     version: CURRENT_VERSION,
     lastUpdated: new Date(),
@@ -131,6 +161,19 @@ export function loadAppState(): AppState {
     }
 
     const parsed = JSON.parse(stored)
+    if (!parsed.schoolDeadlines && Array.isArray(parsed.deadlines)) {
+      parsed.schoolDeadlines = parsed.deadlines.map((dl: any) => ({
+        ...dl,
+        source: dl.source === 'canvas' || dl.source === 'brightspace' ? 'lti' : dl.source ?? 'manual',
+      }))
+      delete parsed.deadlines
+    }
+    if (!parsed.personalEvents) {
+      parsed.personalEvents = []
+    }
+    if (!parsed.assessments) {
+      parsed.assessments = []
+    }
     const validated = AppStateSchema.parse(parsed)
 
     // Version migration logic (if needed in future)

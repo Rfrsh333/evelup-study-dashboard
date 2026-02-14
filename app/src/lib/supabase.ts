@@ -188,6 +188,41 @@ export interface Database {
           created_at?: string
         }
       }
+      assessments: {
+        Row: {
+          id: string
+          user_id: string
+          course: string
+          item: string
+          score: number | null
+          weight: number | null
+          assessed_at: string | null
+          source: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course: string
+          item: string
+          score?: number | null
+          weight?: number | null
+          assessed_at?: string | null
+          source?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          course?: string
+          item?: string
+          score?: number | null
+          weight?: number | null
+          assessed_at?: string | null
+          source?: string
+          created_at?: string
+        }
+      }
       lti_launches: {
         Row: {
           id: string

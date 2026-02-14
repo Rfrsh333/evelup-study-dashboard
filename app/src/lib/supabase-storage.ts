@@ -44,14 +44,36 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
     }
 
     // Parse dates from JSON
-    const state = data.state as AppState
+    const state = data.state as AppState & { deadlines?: any[] }
+    if (!state.schoolDeadlines && Array.isArray(state.deadlines)) {
+      state.schoolDeadlines = state.deadlines.map((dl) => ({
+        ...dl,
+        source: dl.source ?? 'manual',
+      }))
+      delete state.deadlines
+    }
+    if (!state.personalEvents) {
+      state.personalEvents = []
+    }
+    if (!state.assessments) {
+      state.assessments = []
+    }
     return {
       ...state,
-      deadlines: state.deadlines.map((dl) => ({
+      schoolDeadlines: state.schoolDeadlines.map((dl) => ({
         ...dl,
         deadline: new Date(dl.deadline),
         createdAt: new Date(dl.createdAt),
         completedAt: dl.completedAt ? new Date(dl.completedAt) : undefined,
+      })),
+      personalEvents: state.personalEvents.map((ev) => ({
+        ...ev,
+        start: new Date(ev.start),
+        end: new Date(ev.end),
+      })),
+      assessments: state.assessments.map((assessment) => ({
+        ...assessment,
+        date: assessment.date ? new Date(assessment.date) : undefined,
       })),
       focusSessions: state.focusSessions.map((fs) => ({
         ...fs,

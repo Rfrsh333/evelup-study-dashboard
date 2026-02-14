@@ -2,7 +2,7 @@
 
 export type QuestStatus = 'on-track' | 'at-risk' | 'completed' | 'failed'
 
-export interface Deadline {
+export interface SchoolDeadline {
   id: string
   title: string
   deadline: Date
@@ -10,6 +10,26 @@ export interface Deadline {
   xp: number
   createdAt: Date
   completedAt?: Date
+  source: 'lti' | 'manual'
+}
+
+export interface PersonalEvent {
+  id: string
+  title: string
+  start: Date
+  end: Date
+  source: 'ics' | 'manual'
+  tag?: 'focus_block'
+}
+
+export interface Assessment {
+  id: string
+  course: string
+  item: string
+  score: number | null
+  weight: number | null
+  date?: Date
+  source: 'csv' | 'manual'
 }
 
 export interface FocusSession {
@@ -92,6 +112,9 @@ export interface UserPreferences {
   studyWindowStart: string // HH:mm format (e.g., '16:00')
   studyWindowEnd: string // HH:mm format (e.g., '18:00')
   language: 'nl' | 'en'
+  preferredFocusStart: string // HH:mm
+  preferredFocusEnd: string // HH:mm
+  preferredFocusMinutes: number // 25 default
 }
 
 // Weekly challenge state
@@ -107,7 +130,9 @@ export interface WeeklyChallengeState {
 
 // Complete application state
 export interface AppState {
-  deadlines: Deadline[]
+  schoolDeadlines: SchoolDeadline[]
+  personalEvents: PersonalEvent[]
+  assessments: Assessment[]
   focusSessions: FocusSession[]
   studyLogs: StudyLog[]
   xp: XPState
@@ -127,8 +152,8 @@ export interface DerivedState {
   levelUpTriggered: boolean
 }
 
-// Quest is an alias for Deadline (keeping for backward compatibility)
-export type Quest = Deadline
+// Quest is an alias for SchoolDeadline (keeping for backward compatibility)
+export type Quest = SchoolDeadline
 
 // Legacy types (keeping for compatibility)
 export interface StudyData {

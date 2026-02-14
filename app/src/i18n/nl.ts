@@ -222,6 +222,7 @@ export const nl = {
       waiting: 'Wachten op CSV',
       imported: '{count} cijfers geïmporteerd',
       pastePlaceholder: 'Plak CSV hier…',
+      blockLabel: 'Blok label',
       parseError: 'CSV kon niet worden gelezen. Controleer het formaat.',
       mapping: {
         course: 'Vak-kolom',
@@ -229,6 +230,8 @@ export const nl = {
         score: 'Cijfer-kolom',
         weight: 'Weging-kolom',
         date: 'Datum-kolom',
+        status: 'Status-kolom',
+        block: 'Blok-kolom',
         optional: 'Optioneel',
       },
     },
@@ -261,6 +264,27 @@ export const nl = {
     placeholder: 'Verbind Brightspace om voorspellingen te zien.',
     empty: 'Geen cijfers gevonden.',
     cta: 'Koppel Brightspace',
+  },
+
+  blockProgress: {
+    title: 'Blok voortgang',
+    blockLabel: 'Blok {block}',
+    noBlock: 'Geen blok geselecteerd',
+    summary: '{passed}/{total} onderdelen voldaan',
+    subtitle: '{pending} open · {failed} niet voldaan · {percent}% voldaan',
+    empty: 'Nog geen blokvoortgang.',
+    cta: 'Importeer Brightspace progress (CSV/PDF)',
+    viewAll: 'Alles bekeken',
+    status: {
+      passed: 'Voldaan',
+      failed: 'Niet voldaan',
+      pending: 'Open',
+    },
+  },
+
+  blockOverview: {
+    title: 'Blokoverzicht',
+    empty: 'Nog geen blokdata.',
   },
 
   today: {

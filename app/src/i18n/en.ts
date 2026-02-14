@@ -222,6 +222,7 @@ export const en = {
       waiting: 'Waiting for CSV',
       imported: '{count} grades imported',
       pastePlaceholder: 'Paste CSV here…',
+      blockLabel: 'Block label',
       parseError: 'Unable to read CSV. Please check the file format.',
       mapping: {
         course: 'Course column',
@@ -229,6 +230,8 @@ export const en = {
         score: 'Score column',
         weight: 'Weight column',
         date: 'Date column',
+        status: 'Status column',
+        block: 'Block column',
         optional: 'Optional',
       },
     },
@@ -261,6 +264,27 @@ export const en = {
     placeholder: 'Connect Brightspace to see predictions.',
     empty: 'No grades found yet.',
     cta: 'Connect Brightspace',
+  },
+
+  blockProgress: {
+    title: 'Block progress',
+    blockLabel: 'Block {block}',
+    noBlock: 'No block selected',
+    summary: '{passed}/{total} items passed',
+    subtitle: '{pending} open · {failed} failed · {percent}% passed',
+    empty: 'No block progress yet.',
+    cta: 'Import Brightspace progress (CSV/PDF)',
+    viewAll: 'View all',
+    status: {
+      passed: 'Passed',
+      failed: 'Not passed',
+      pending: 'Open',
+    },
+  },
+
+  blockOverview: {
+    title: 'Block overview',
+    empty: 'No block data yet.',
   },
 
   today: {

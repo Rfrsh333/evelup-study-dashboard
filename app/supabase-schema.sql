@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
+  email TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   preferred_language TEXT DEFAULT 'nl' CHECK (preferred_language IN ('nl', 'en'))
 );
@@ -18,6 +18,9 @@ ALTER TABLE IF EXISTS public.users
   ADD COLUMN IF NOT EXISTS email TEXT,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
   ADD COLUMN IF NOT EXISTS preferred_language TEXT DEFAULT 'nl';
+
+ALTER TABLE IF EXISTS public.users
+  ALTER COLUMN email DROP NOT NULL;
 
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -131,39 +134,6 @@ CREATE POLICY IF NOT EXISTS "Users can update own integrations"
   ON public.integrations FOR UPDATE
   USING (auth.uid() = user_id);
 
--- OAuth tokens (server-side only)
-CREATE TABLE IF NOT EXISTS public.oauth_tokens (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  provider TEXT NOT NULL,
-  access_token TEXT NOT NULL,
-  refresh_token TEXT,
-  expires_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE IF EXISTS public.oauth_tokens
-  ADD COLUMN IF NOT EXISTS user_id UUID,
-  ADD COLUMN IF NOT EXISTS provider TEXT,
-  ADD COLUMN IF NOT EXISTS access_token TEXT,
-  ADD COLUMN IF NOT EXISTS refresh_token TEXT,
-  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
-
-ALTER TABLE public.oauth_tokens ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY IF NOT EXISTS "Users can view own oauth tokens"
-  ON public.oauth_tokens FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users can insert own oauth tokens"
-  ON public.oauth_tokens FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY IF NOT EXISTS "Users can update own oauth tokens"
-  ON public.oauth_tokens FOR UPDATE
-  USING (auth.uid() = user_id);
-
 -- Calendar sources
 CREATE TABLE IF NOT EXISTS public.calendar_sources (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -193,6 +163,84 @@ CREATE POLICY IF NOT EXISTS "Users can delete own calendar sources"
   ON public.calendar_sources FOR DELETE
   USING (auth.uid() = user_id);
 
+-- LMS deadlines
+CREATE TABLE IF NOT EXISTS public.deadlines (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  due_at TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'on-track',
+  source TEXT NOT NULL,
+  course_id TEXT,
+  course_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, title, due_at)
+);
+
+ALTER TABLE IF EXISTS public.deadlines
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS title TEXT,
+  ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'on-track',
+  ADD COLUMN IF NOT EXISTS source TEXT,
+  ADD COLUMN IF NOT EXISTS course_id TEXT,
+  ADD COLUMN IF NOT EXISTS course_name TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.deadlines ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own deadlines"
+  ON public.deadlines FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own deadlines"
+  ON public.deadlines FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own deadlines"
+  ON public.deadlines FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Grades table
+CREATE TABLE IF NOT EXISTS public.grades (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  course_id TEXT NOT NULL,
+  course_name TEXT,
+  current_score NUMERIC,
+  predicted_score NUMERIC,
+  required_score NUMERIC,
+  source TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, course_id)
+);
+
+ALTER TABLE IF EXISTS public.grades
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS course_id TEXT,
+  ADD COLUMN IF NOT EXISTS course_name TEXT,
+  ADD COLUMN IF NOT EXISTS current_score NUMERIC,
+  ADD COLUMN IF NOT EXISTS predicted_score NUMERIC,
+  ADD COLUMN IF NOT EXISTS required_score NUMERIC,
+  ADD COLUMN IF NOT EXISTS source TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+ALTER TABLE public.grades ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own grades"
+  ON public.grades FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own grades"
+  ON public.grades FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own grades"
+  ON public.grades FOR UPDATE
+  USING (auth.uid() = user_id);
+
 -- LTI launch context
 CREATE TABLE IF NOT EXISTS public.lti_launches (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -214,6 +262,51 @@ ALTER TABLE public.lti_launches ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY IF NOT EXISTS "Users can view own lti launches"
   ON public.lti_launches FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own lti launches"
+  ON public.lti_launches FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Courses
+CREATE TABLE IF NOT EXISTS public.courses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  lti_context_id TEXT,
+  title TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.courses
+  ADD COLUMN IF NOT EXISTS user_id UUID,
+  ADD COLUMN IF NOT EXISTS lti_context_id TEXT,
+  ADD COLUMN IF NOT EXISTS title TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Drop legacy unique constraint on lti_context_id if present (per-user courses)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'courses_lti_context_id_key'
+  ) THEN
+    ALTER TABLE public.courses DROP CONSTRAINT courses_lti_context_id_key;
+  END IF;
+END $$;
+
+ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own courses"
+  ON public.courses FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert own courses"
+  ON public.courses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update own courses"
+  ON public.courses FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Push subscriptions (web push)
@@ -266,14 +359,32 @@ CREATE INDEX IF NOT EXISTS idx_events_type
 CREATE INDEX IF NOT EXISTS idx_integrations_user_id
   ON public.integrations(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user_id
-  ON public.oauth_tokens(user_id);
-
 CREATE INDEX IF NOT EXISTS idx_calendar_sources_user_id
   ON public.calendar_sources(user_id);
 
+CREATE INDEX IF NOT EXISTS idx_deadlines_user_id
+  ON public.deadlines(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_grades_user_id
+  ON public.grades(user_id);
+
 CREATE INDEX IF NOT EXISTS idx_lti_launches_user_id
   ON public.lti_launches(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_courses_context_id
+  ON public.courses(lti_context_id);
+
+CREATE INDEX IF NOT EXISTS idx_courses_user_id
+  ON public.courses(user_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_courses_user_context
+  ON public.courses(user_id, lti_context_id);
+
+CREATE INDEX IF NOT EXISTS idx_deadlines_user_course
+  ON public.deadlines(user_id, course_id);
+
+CREATE INDEX IF NOT EXISTS idx_grades_user_course
+  ON public.grades(user_id, course_id);
 
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id
   ON public.push_subscriptions(user_id);

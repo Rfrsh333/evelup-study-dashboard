@@ -47,19 +47,19 @@ export interface Database {
       users: {
         Row: {
           id: string
-          email: string
+          email: string | null
           created_at: string
           preferred_language: 'nl' | 'en'
         }
         Insert: {
           id: string
-          email: string
+          email?: string | null
           created_at?: string
           preferred_language?: 'nl' | 'en'
         }
         Update: {
           id?: string
-          email?: string
+          email?: string | null
           created_at?: string
           preferred_language?: 'nl' | 'en'
         }
@@ -165,35 +165,6 @@ export interface Database {
           created_at?: string
         }
       }
-      oauth_tokens: {
-        Row: {
-          id: string
-          user_id: string
-          provider: string
-          access_token: string
-          refresh_token: string | null
-          expires_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          provider: string
-          access_token: string
-          refresh_token?: string | null
-          expires_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          provider?: string
-          access_token?: string
-          refresh_token?: string | null
-          expires_at?: string | null
-          created_at?: string
-        }
-      }
       calendar_sources: {
         Row: {
           id: string
@@ -241,6 +212,102 @@ export interface Database {
           deployment_id?: string | null
           context?: any
           created_at?: string
+        }
+      }
+      courses: {
+        Row: {
+          id: string
+          user_id: string
+          lti_context_id: string | null
+          title: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          lti_context_id?: string | null
+          title: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          lti_context_id?: string | null
+          title?: string
+          created_at?: string
+        }
+      }
+      deadlines: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          due_at: string
+          status: string
+          source: string
+          course_id: string | null
+          course_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          due_at: string
+          status?: string
+          source: string
+          course_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          due_at?: string
+          status?: string
+          source?: string
+          course_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      grades: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          course_name: string | null
+          current_score: number | null
+          predicted_score: number | null
+          required_score: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          course_name?: string | null
+          current_score?: number | null
+          predicted_score?: number | null
+          required_score?: number | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          course_id?: string
+          course_name?: string | null
+          current_score?: number | null
+          predicted_score?: number | null
+          required_score?: number | null
+          source?: string
+          updated_at?: string
         }
       }
     }

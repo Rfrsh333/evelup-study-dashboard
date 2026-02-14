@@ -1,16 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from './app/AuthProvider'
 import { useAppState } from './app/AppStateProvider'
 import { Layout } from './app/layout'
-import { DashboardPage } from './pages/DashboardPage'
-import { AuthPage } from './pages/AuthPage'
 import { LoadingScreen } from './components/common/LoadingScreen'
-import { InsightsPage } from './pages/InsightsPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { WeekPage } from './pages/WeekPage'
 import type { AppView } from './components/common/Sidebar'
 import { trackEvent } from './lib/analytics'
 import { useTranslation } from './i18n'
+import { lazy } from 'react'
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((mod) => ({ default: mod.DashboardPage })))
+const InsightsPage = lazy(() => import('./pages/InsightsPage').then((mod) => ({ default: mod.InsightsPage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((mod) => ({ default: mod.SettingsPage })))
+const WeekPage = lazy(() => import('./pages/WeekPage').then((mod) => ({ default: mod.WeekPage })))
+const AuthPage = lazy(() => import('./pages/AuthPage').then((mod) => ({ default: mod.AuthPage })))
 
 function App() {
   const { user, loading: authLoading, error: authError } = useAuth()
@@ -50,10 +52,12 @@ function App() {
   // Show auth page if not logged in
   if (!user) {
     return (
-      <div className="space-y-4">
-        {notices.length > 0 && <NoticeBanner messages={notices} />}
-        <AuthPage />
-      </div>
+      <Suspense fallback={<LoadingScreen />}>
+        <div className="space-y-4">
+          {notices.length > 0 && <NoticeBanner messages={notices} />}
+          <AuthPage />
+        </div>
+      </Suspense>
     )
   }
 
@@ -63,10 +67,13 @@ function App() {
   return (
     <Layout currentView={currentView} onNavigate={setCurrentView}>
       {notices.length > 0 && <NoticeBanner messages={notices} />}
-      {currentView === 'dashboard' && <DashboardPage />}
-      {currentView === 'week' && <WeekPage />}
-      {currentView === 'insights' && (isAdmin ? <InsightsPage /> : <AccessDenied message={t('insights.adminOnly')} />)}
-      {currentView === 'settings' && <SettingsPage />}
+      <Suspense fallback={<LoadingScreen />}>
+        {currentView === 'dashboard' && <DashboardPage />}
+        {currentView === 'week' && <WeekPage />}
+        {currentView === 'insights' &&
+          (isAdmin ? <InsightsPage /> : <AccessDenied message={t('insights.adminOnly')} />)}
+        {currentView === 'settings' && <SettingsPage />}
+      </Suspense>
     </Layout>
   )
 }

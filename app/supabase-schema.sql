@@ -111,3 +111,49 @@ DROP TRIGGER IF EXISTS update_user_state_updated_at ON public.user_state;
 CREATE TRIGGER update_user_state_updated_at
   BEFORE UPDATE ON public.user_state
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- RPC Function to calculate user's percentile for this week
+-- This calculates percentile based on momentum scores across all active users
+CREATE OR REPLACE FUNCTION public.calculate_user_percentile(user_score INTEGER)
+RETURNS INTEGER AS $$
+DECLARE
+  percentile INTEGER;
+  scores_below INTEGER;
+  total_scores INTEGER;
+BEGIN
+  -- Calculate how many users have scores below the user's score
+  -- This is a simplified implementation for MVP
+  -- In production, you'd want to maintain a weekly_scores materialized view
+
+  WITH user_scores AS (
+    SELECT
+      user_id,
+      -- Extract simple score from state JSONB
+      -- This is a placeholder - adjust based on actual state structure
+      COALESCE(
+        (state->'xp'->>'totalXP')::INTEGER,
+        0
+      ) as score
+    FROM public.user_state
+    WHERE updated_at >= NOW() - INTERVAL '7 days'
+  )
+  SELECT
+    COUNT(*) FILTER (WHERE score < user_score),
+    COUNT(*)
+  INTO scores_below, total_scores
+  FROM user_scores;
+
+  -- Avoid division by zero
+  IF total_scores = 0 OR total_scores = 1 THEN
+    RETURN NULL;
+  END IF;
+
+  -- Calculate percentile (0-100)
+  percentile := ROUND((scores_below::DECIMAL / total_scores) * 100);
+
+  RETURN percentile;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.calculate_user_percentile(INTEGER) TO authenticated;

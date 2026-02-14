@@ -53,6 +53,7 @@ export interface MomentumScore {
   score: number // 0-100 (weighted total)
   breakdown: MomentumBreakdown
   trend?: MomentumTrend
+  percentileThisWeek?: number // 0-100 (user's percentile rank)
 }
 
 export interface MomentumTrend {
@@ -86,6 +87,24 @@ export interface DailyObjective {
   labelNL: string
 }
 
+// User preferences
+export interface UserPreferences {
+  studyWindowStart: string // HH:mm format (e.g., '16:00')
+  studyWindowEnd: string // HH:mm format (e.g., '18:00')
+  language: 'nl' | 'en'
+}
+
+// Weekly challenge state
+export interface WeeklyChallengeState {
+  type: 'focus_sessions' | 'study_days' | 'study_minutes'
+  target: number
+  current: number
+  completed: boolean
+  weekStart: Date
+  bonusXP: number
+  xpAwarded: boolean
+}
+
 // Complete application state
 export interface AppState {
   deadlines: Deadline[]
@@ -94,6 +113,8 @@ export interface AppState {
   xp: XPState
   streak: StreakState
   dailyObjectives: DailyObjectivesState | null
+  weeklyChallenge: WeeklyChallengeState | null
+  preferences: UserPreferences
   version: number
   lastUpdated: Date
 }

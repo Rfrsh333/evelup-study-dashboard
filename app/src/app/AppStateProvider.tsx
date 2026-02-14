@@ -13,9 +13,16 @@ import {
   calculateObjectiveProgress,
   DAILY_OBJECTIVES_BONUS_XP,
 } from '@/domain/daily-objectives'
+import {
+  getDefaultWeeklyChallenge,
+  shouldResetWeeklyChallenge,
+  calculateChallengeProgress,
+  WEEKLY_CHALLENGE_XP,
+} from '@/domain/weekly-challenge'
 import { startOfWeek, endOfWeek } from 'date-fns'
 import { generateDemoData } from '@/lib/demo-data'
 import { trackEvent } from '@/lib/analytics'
+import { calculatePercentile } from '@/domain/percentile'
 
 interface AppStateContextValue {
   // Core state
@@ -142,6 +149,58 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
   }, [loading, state.dailyObjectives])
 
+  // Auto-reset weekly challenge if needed
+  useEffect(() => {
+    if (loading) return
+
+    if (shouldResetWeeklyChallenge(state.weeklyChallenge)) {
+      setState((prev) => ({
+        ...prev,
+        weeklyChallenge: getDefaultWeeklyChallenge(),
+      }))
+    }
+  }, [loading, state.weeklyChallenge])
+
+  // Update weekly challenge progress automatically
+  useEffect(() => {
+    if (!state.weeklyChallenge || loading) return
+
+    const updatedChallenge = calculateChallengeProgress(
+      state.weeklyChallenge,
+      state.studyLogs,
+      state.focusSessions
+    )
+
+    // Award bonus XP if completed and not yet awarded
+    if (updatedChallenge.completed && !updatedChallenge.xpAwarded) {
+      const { newState: newXP, leveledUp } = awardXP(state.xp, WEEKLY_CHALLENGE_XP)
+      if (leveledUp) setLevelUpTriggered(true)
+
+      trackEvent('weekly_challenge_completed', {
+        type: updatedChallenge.type,
+        target: updatedChallenge.target,
+      })
+
+      setState((prev) => ({
+        ...prev,
+        weeklyChallenge: {
+          ...updatedChallenge,
+          xpAwarded: true,
+        },
+        xp: newXP,
+      }))
+    } else if (
+      updatedChallenge.current !== state.weeklyChallenge.current ||
+      updatedChallenge.completed !== state.weeklyChallenge.completed
+    ) {
+      // Just update progress
+      setState((prev) => ({
+        ...prev,
+        weeklyChallenge: updatedChallenge,
+      }))
+    }
+  }, [state.studyLogs, state.focusSessions, loading])
+
   // Calculate derived state with memoization
   const derived = useMemo<DerivedState>(() => {
     const momentum = calculateMomentumScore(
@@ -173,6 +232,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       levelUpTriggered,
     }
   }, [state, levelUpTriggered])
+
+  // Fetch percentile asynchronously and update momentum
+  useEffect(() => {
+    if (loading) return
+
+    async function fetchPercentile() {
+      const percentile = await calculatePercentile(derived.momentum.score)
+      if (percentile !== undefined && percentile !== derived.momentum.percentileThisWeek) {
+        // Update momentum with percentile (without triggering re-render loop)
+        derived.momentum.percentileThisWeek = percentile
+      }
+    }
+
+    fetchPercentile()
+  }, [derived.momentum.score, loading])
 
   // Update daily objectives progress automatically
   useEffect(() => {
@@ -365,6 +439,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       xp: xpState,
       streak,
       dailyObjectives: null, // Will auto-generate on next render
+      weeklyChallenge: null, // Will auto-generate on next render
+      preferences: {
+        studyWindowStart: '16:00',
+        studyWindowEnd: '18:00',
+        language: 'nl',
+      },
       version: 1,
       lastUpdated: new Date(),
     })

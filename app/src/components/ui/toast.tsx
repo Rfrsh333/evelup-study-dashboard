@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
+import { makeId } from '@/lib/id'
 
 interface ToastContextValue {
   toasts: Toast[]
@@ -20,7 +21,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([])
 
   const addToast = React.useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = `toast-${Date.now()}`
+    const id = makeId('toast')
     const newToast = { ...toast, id }
     setToasts((prev) => [...prev, newToast])
 

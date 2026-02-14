@@ -1,6 +1,14 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
-import type { AppState, DerivedState, Deadline, FocusSession, StudyLog } from '@/domain/types'
+import type {
+  AppState,
+  DerivedState,
+  SchoolDeadline,
+  FocusSession,
+  StudyLog,
+  PersonalEvent,
+  Assessment,
+} from '@/domain/types'
 import { loadAppState, saveAppState, clearAppState, getDefaultAppState } from '@/lib/storage'
 import { loadAppStateFromSupabase, saveAppStateToSupabase, clearAppStateFromSupabase } from '@/lib/supabase-storage'
 import { calculateStreak } from '@/domain/streak'
@@ -23,8 +31,10 @@ import { generateDemoData } from '@/lib/demo-data'
 import { trackEvent } from '@/lib/analytics'
 import { useAuth } from './AuthProvider'
 import { SupabaseTableMissingError } from '@/lib/supabase-errors'
-import { isSupabaseConfigured, setGlobalDbUnavailable } from '@/lib/supabase'
+import { isSupabaseConfigured, setGlobalDbUnavailable, supabaseStatus } from '@/lib/supabase'
+import { checkSupabaseHealth } from '@/lib/supabase-health'
 import { calculatePercentile } from '@/domain/percentile'
+import { makeId } from '@/lib/id'
 
 interface AppStateContextValue {
   // Core state
@@ -33,8 +43,10 @@ interface AppStateContextValue {
   dbUnavailable: boolean
 
   // Actions
-  addDeadline: (deadline: Omit<Deadline, 'id' | 'createdAt'>) => void
-  updateDeadline: (id: string, updates: Partial<Deadline>) => void
+  addSchoolDeadline: (deadline: Omit<SchoolDeadline, 'id' | 'createdAt'>) => void
+  addPersonalEvent: (event: Omit<PersonalEvent, 'id'>) => void
+  addAssessment: (assessment: Omit<Assessment, 'id'>) => void
+  updateDeadline: (id: string, updates: Partial<SchoolDeadline>) => void
   completeDeadline: (id: string) => void
   deleteDeadline: (id: string) => void
 
@@ -42,6 +54,7 @@ interface AppStateContextValue {
   completeFocusSession: (id: string) => void
 
   addStudyLog: (log: Omit<StudyLog, 'id'>) => void
+  updatePreferences: (updates: Partial<AppState['preferences']>) => void
 
   resetAppState: () => void
   seedDemoData: () => void
@@ -85,6 +98,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     const loadInitialState = async () => {
+      if (!dbUnavailable && isSupabaseConfigured) {
+        await checkSupabaseHealth()
+      }
+      if (supabaseStatus.dbUnavailable) {
+        setDbUnavailable(true)
+        setGlobalDbUnavailable(true)
+      }
+
       setPersistReady(false)
 
       if (dbUnavailable) {
@@ -289,7 +310,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const momentum = calculateMomentumScore(
       state.studyLogs,
       state.focusSessions,
-      state.deadlines,
+      state.schoolDeadlines,
       state.streak.currentStreak
     )
 
@@ -376,29 +397,51 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [state.studyLogs, state.focusSessions, loading])
 
   // Actions
-  const addDeadline = useCallback((deadline: Omit<Deadline, 'id' | 'createdAt'>) => {
-    const newDeadline: Deadline = {
+  const addSchoolDeadline = useCallback((deadline: Omit<SchoolDeadline, 'id' | 'createdAt'>) => {
+    const newDeadline: SchoolDeadline = {
       ...deadline,
-      id: `dl-${Date.now()}`,
+      id: makeId('dl'),
       createdAt: new Date(),
     }
     setState((prev) => ({
       ...prev,
-      deadlines: [...prev.deadlines, newDeadline],
+      schoolDeadlines: [...prev.schoolDeadlines, newDeadline],
     }))
     trackEvent('deadline_added', { title: deadline.title })
   }, [])
 
-  const updateDeadline = useCallback((id: string, updates: Partial<Deadline>) => {
+  const addPersonalEvent = useCallback((event: Omit<PersonalEvent, 'id'>) => {
+    const newEvent: PersonalEvent = {
+      ...event,
+      id: makeId('pe'),
+    }
     setState((prev) => ({
       ...prev,
-      deadlines: prev.deadlines.map((dl) => (dl.id === id ? { ...dl, ...updates } : dl)),
+      personalEvents: [...prev.personalEvents, newEvent],
+    }))
+  }, [])
+
+  const addAssessment = useCallback((assessment: Omit<Assessment, 'id'>) => {
+    const newAssessment: Assessment = {
+      ...assessment,
+      id: makeId('as'),
+    }
+    setState((prev) => ({
+      ...prev,
+      assessments: [...prev.assessments, newAssessment],
+    }))
+  }, [])
+
+  const updateDeadline = useCallback((id: string, updates: Partial<SchoolDeadline>) => {
+    setState((prev) => ({
+      ...prev,
+      schoolDeadlines: prev.schoolDeadlines.map((dl) => (dl.id === id ? { ...dl, ...updates } : dl)),
     }))
   }, [])
 
   const completeDeadline = useCallback((id: string) => {
     setState((prev) => {
-      if (!prev.deadlines.find((dl) => dl.id === id)) return prev
+      if (!prev.schoolDeadlines.find((dl) => dl.id === id)) return prev
 
       // Award XP for completing deadline
       const { newState: newXP, leveledUp } = awardXP(prev.xp, XP_REWARDS.DEADLINE_COMPLETED)
@@ -411,7 +454,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       return {
         ...prev,
-        deadlines: prev.deadlines.map((dl) =>
+        schoolDeadlines: prev.schoolDeadlines.map((dl) =>
           dl.id === id ? { ...dl, status: 'completed', completedAt: new Date() } : dl
         ),
         xp: newXP,
@@ -422,14 +465,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const deleteDeadline = useCallback((id: string) => {
     setState((prev) => ({
       ...prev,
-      deadlines: prev.deadlines.filter((dl) => dl.id !== id),
+      schoolDeadlines: prev.schoolDeadlines.filter((dl) => dl.id !== id),
     }))
   }, [])
 
   const addFocusSession = useCallback((session: Omit<FocusSession, 'id'>) => {
     const newSession: FocusSession = {
       ...session,
-      id: `fs-${Date.now()}`,
+      id: makeId('fs'),
     }
     setState((prev) => ({
       ...prev,
@@ -462,7 +505,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const newLog: StudyLog = {
         ...log,
-        id: `log-${Date.now()}`,
+        id: makeId('log'),
       }
 
       const newStudyLogs = [...prev.studyLogs, newLog]
@@ -489,6 +532,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const updatePreferences = useCallback((updates: Partial<AppState['preferences']>) => {
+    setState((prev) => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        ...updates,
+      },
+    }))
+  }, [])
+
   const resetAppState = useCallback(async () => {
     trackEvent('data_reset')
     if (isAuthenticated && !dbUnavailable) {
@@ -509,13 +562,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const seedDemoData = useCallback(() => {
     trackEvent('demo_data_loaded')
-    const { deadlines, focusSessions, studyLogs } = generateDemoData()
+    const { schoolDeadlines, personalEvents, focusSessions, studyLogs } = generateDemoData()
 
     // Calculate total XP from demo data
     const totalXP =
       studyLogs.reduce((sum, log) => sum + log.xpAwarded, 0) +
       focusSessions.reduce((sum, fs) => sum + (fs.completed ? fs.xpAwarded : 0), 0) +
-      deadlines
+      schoolDeadlines
         .filter((dl) => dl.status === 'completed')
         .reduce((sum) => sum + XP_REWARDS.DEADLINE_COMPLETED, 0)
 
@@ -523,7 +576,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const streak = calculateStreak(studyLogs)
 
     setState({
-      deadlines,
+      schoolDeadlines,
+      personalEvents,
+      assessments: [],
       focusSessions,
       studyLogs,
       xp: xpState,
@@ -534,6 +589,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         studyWindowStart: '16:00',
         studyWindowEnd: '18:00',
         language: 'nl',
+        preferredFocusStart: '16:00',
+        preferredFocusEnd: '18:00',
+        preferredFocusMinutes: 25,
       },
       version: 1,
       lastUpdated: new Date(),
@@ -590,13 +648,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     state,
     derived,
     dbUnavailable,
-    addDeadline,
+    addSchoolDeadline,
+    addPersonalEvent,
+    addAssessment,
     updateDeadline,
     completeDeadline,
     deleteDeadline,
     addFocusSession,
     completeFocusSession,
     addStudyLog,
+    updatePreferences,
     resetAppState,
     seedDemoData,
     markObjectiveComplete,

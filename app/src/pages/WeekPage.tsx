@@ -10,6 +10,30 @@ export function WeekPage() {
   const { t } = useTranslation()
   const [filter, setFilter] = useState<WeekFilter>('school')
   const [highlightPersonal, setHighlightPersonal] = useState(false)
+  const now = new Date()
+  const windowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+  const windowEnd = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)
+  const personalInWindow = state.personalEvents.filter(
+    (ev) => ev.start >= windowStart && ev.start <= windowEnd
+  )
+  const schoolInWindow = state.schoolDeadlines.filter(
+    (dl) => dl.deadline >= windowStart && dl.deadline <= windowEnd
+  )
+  const personalVisible = filter === 'personal' ? personalInWindow : []
+  const schoolVisible = filter === 'school' ? schoolInWindow : []
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.debug('Week view window', {
+        windowStart: windowStart.toISOString(),
+        windowEnd: windowEnd.toISOString(),
+        personalTotal: state.personalEvents.length,
+        personalVisible: personalInWindow.length,
+        schoolTotal: state.schoolDeadlines.length,
+        schoolVisible: schoolInWindow.length,
+      })
+    }
+  }, [state.personalEvents.length, state.schoolDeadlines.length, personalInWindow.length, schoolInWindow.length, windowStart, windowEnd])
 
   useEffect(() => {
     const count = Number(localStorage.getItem('levelup-new-personal-events') || '0')
@@ -58,10 +82,15 @@ export function WeekPage() {
       {filter === 'school' && (
         <CardShell title={t('week.schoolTitle')}>
           <div className="space-y-3">
-            {state.schoolDeadlines.length === 0 && (
+            {schoolInWindow.length === 0 && (
               <p className="text-sm text-muted-foreground">{t('week.emptySchool')}</p>
             )}
-            {state.schoolDeadlines.map((dl) => (
+            {state.schoolDeadlines.length > 0 && schoolInWindow.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('calendar.outOfWindow', { count: state.schoolDeadlines.length })}
+              </p>
+            )}
+            {schoolVisible.map((dl) => (
               <div key={dl.id} className="rounded-lg border border-border p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span>{dl.title}</span>
@@ -76,10 +105,15 @@ export function WeekPage() {
       {filter === 'personal' && (
         <CardShell title={t('week.personalTitle')}>
           <div className="space-y-3">
-            {state.personalEvents.length === 0 && (
+            {personalInWindow.length === 0 && (
               <p className="text-sm text-muted-foreground">{t('week.emptyPersonal')}</p>
             )}
-            {state.personalEvents.map((ev) => (
+            {state.personalEvents.length > 0 && personalInWindow.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('calendar.outOfWindow', { count: state.personalEvents.length })}
+              </p>
+            )}
+            {personalVisible.map((ev) => (
               <div
                 key={ev.id}
                 className={`rounded-lg border border-border p-3 text-sm ${

@@ -144,6 +144,14 @@ export function IntegrationsSection() {
     setIcsDebug(result.debug)
     setIcsError(null)
     setIcsStatus(null)
+    if (import.meta.env.DEV) {
+      console.debug('ICS parse debug', {
+        parsedTotal: result.debug.parsedTotal,
+        keptTotal: result.debug.keptTotal,
+        windowStart: result.debug.windowStart,
+        windowEnd: result.debug.windowEnd,
+      })
+    }
 
     if (result.error) {
       if (result.error.kind === 'NO_VEVENT') {

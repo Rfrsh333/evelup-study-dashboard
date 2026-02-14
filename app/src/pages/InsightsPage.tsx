@@ -4,9 +4,11 @@ import { CardShell } from '@/components/common/CardShell'
 import { SystemBanner } from '@/components/common/SystemBanner'
 import { fetchInsights, getMockInsights, type InsightsData } from '@/lib/insights'
 import { useAppState } from '@/app/AppStateProvider'
+import { useTranslation } from '@/i18n'
 
 export function InsightsPage() {
   const { dbUnavailable } = useAppState()
+  const { t } = useTranslation()
   const [data, setData] = useState<InsightsData>(() => getMockInsights())
   const [loading, setLoading] = useState(true)
 
@@ -33,7 +35,7 @@ export function InsightsPage() {
     <div className="space-y-6">
       <SystemBanner />
 
-      <CardShell title="DAU (last 14 days)">
+      <CardShell title={t('insights.dauTitle')}>
         <div className="h-64 w-full min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data.dauSeries} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
@@ -55,20 +57,20 @@ export function InsightsPage() {
       </CardShell>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <CardShell title="D1 retention">
+        <CardShell title={t('insights.d1Title')}>
           <div className="flex h-40 items-center justify-center">
             <div className="text-center">
               <div className="text-4xl font-semibold">{loading ? '—' : `${data.retention.d1}%`}</div>
-              <p className="mt-2 text-sm text-muted-foreground">Last 14 signup cohorts</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t('insights.d1Subtitle')}</p>
             </div>
           </div>
         </CardShell>
 
-        <CardShell title="W1 retention">
+        <CardShell title={t('insights.w1Title')}>
           <div className="flex h-40 items-center justify-center">
             <div className="text-center">
               <div className="text-4xl font-semibold">{loading ? '—' : `${data.retention.w1}%`}</div>
-              <p className="mt-2 text-sm text-muted-foreground">Last 8 cohorts</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t('insights.w1Subtitle')}</p>
             </div>
           </div>
         </CardShell>

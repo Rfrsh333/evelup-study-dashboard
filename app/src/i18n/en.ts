@@ -200,6 +200,15 @@ export const en = {
     },
   },
 
+  insights: {
+    dauTitle: 'DAU (last 14 days)',
+    d1Title: 'D1 retention',
+    d1Subtitle: 'Last 14 signup cohorts',
+    w1Title: 'W1 retention',
+    w1Subtitle: 'Last 8 cohorts',
+    adminOnly: 'Insights are limited to admins.',
+  },
+
   system: {
     dbLocalMode: {
       title: 'Database not configured. Local mode active.',

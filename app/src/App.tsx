@@ -9,12 +9,14 @@ import { InsightsPage } from './pages/InsightsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import type { AppView } from './components/common/Sidebar'
 import { trackEvent } from './lib/analytics'
+import { useTranslation } from './i18n'
 
 function App() {
   const { user, loading: authLoading, error: authError } = useAuth()
   const { loading: stateLoading } = useAppState()
   const firstRenderLogged = useRef(false)
   const [currentView, setCurrentView] = useState<AppView>('dashboard')
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (authLoading || stateLoading) return
@@ -45,12 +47,14 @@ function App() {
     )
   }
 
+  const isAdmin = isAdminEmail(user?.email)
+
   // Show dashboard if logged in
   return (
     <Layout currentView={currentView} onNavigate={setCurrentView}>
       {notices.length > 0 && <NoticeBanner messages={notices} />}
       {currentView === 'dashboard' && <DashboardPage />}
-      {currentView === 'insights' && <InsightsPage />}
+      {currentView === 'insights' && (isAdmin ? <InsightsPage /> : <AccessDenied message={t('insights.adminOnly')} />)}
       {currentView === 'settings' && <SettingsPage />}
     </Layout>
   )
@@ -78,4 +82,22 @@ function NoticeBanner({ messages }: { messages: string[] }) {
       </ul>
     </div>
   )
+}
+
+function AccessDenied({ message }: { message: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-muted px-4 py-6 text-center text-sm text-muted-foreground">
+      {message}
+    </div>
+  )
+}
+
+function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false
+  const raw = import.meta.env.VITE_ADMIN_EMAILS || ''
+  const list = raw
+    .split(',')
+    .map((entry: string) => entry.trim().toLowerCase())
+    .filter(Boolean)
+  return list.includes(email.toLowerCase())
 }

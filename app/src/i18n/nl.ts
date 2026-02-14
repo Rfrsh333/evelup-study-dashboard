@@ -200,6 +200,15 @@ export const nl = {
     },
   },
 
+  insights: {
+    dauTitle: 'DAU (laatste 14 dagen)',
+    d1Title: 'D1 retentie',
+    d1Subtitle: 'Laatste 14 cohorts',
+    w1Title: 'W1 retentie',
+    w1Subtitle: 'Laatste 8 cohorts',
+    adminOnly: 'Insights zijn alleen voor admins.',
+  },
+
   system: {
     dbLocalMode: {
       title: 'Database nog niet ingesteld. Lokale modus actief.',

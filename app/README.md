@@ -46,6 +46,11 @@ VITE_VAPID_PUBLIC_KEY=your_public_vapid_key
    - `VAPID_SUBJECT`
 5. Schedule the function (Supabase cron or external cron).
 
+### Integrations
+- Canvas OAuth: use a server-side callback (Edge Function) to keep the client secret off the frontend.
+- Calendar: import `.ics` files to sync deadlines.
+- LTI 1.3: see `LTI_SETUP.md` (requires school admin install).
+
 ### 3. Run Development Server
 ```bash
 npm run dev

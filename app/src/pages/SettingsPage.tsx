@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CardShell } from '@/components/common/CardShell'
-import { SystemBanner } from '@/components/common/SystemBanner'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
 import {
@@ -11,6 +10,7 @@ import {
   saveSubscriptionToSupabase,
   subscribeToPush,
 } from '@/lib/push'
+import { IntegrationsSection } from './IntegrationsSection'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
 
@@ -121,7 +121,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <SystemBanner />
+      <IntegrationsSection />
 
       <CardShell title={t('settings.notifications')}>
         <div className="flex flex-col gap-4">

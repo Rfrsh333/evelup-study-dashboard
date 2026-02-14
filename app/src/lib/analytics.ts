@@ -8,6 +8,7 @@ export type EventType =
   | 'push_opt_out'
   | 'push_permission_denied'
   | 'push_sent'
+  | 'calendar_import'
   | 'focus_started'
   | 'focus_completed'
   | 'deadline_added'

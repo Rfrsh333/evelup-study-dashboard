@@ -18,7 +18,6 @@ import {
   type CsvMapping,
   type CsvRow,
 } from '@/integrations/brightspace/csvImport'
-import { extractTextFromPdf, parseProgressSummary, toAssessment } from '@/integrations/brightspace/pdfImport'
 
 type PdfRow = {
   id: string
@@ -295,6 +294,9 @@ export function IntegrationsSection() {
     setPdfLoading(true)
     setPdfWarnings([])
     try {
+      const { extractTextFromPdf, parseProgressSummary } = await import(
+        '@/integrations/brightspace/pdfImport'
+      )
       const text = await extractTextFromPdf(pdfFile)
       const result = parseProgressSummary(text)
       setPdfWarnings(result.warnings)
@@ -330,6 +332,7 @@ export function IntegrationsSection() {
       (row) => !existing.has(`${row.course ?? 'Course'}-${row.item}`)
     )
 
+    const { toAssessment } = await import('@/integrations/brightspace/pdfImport')
     const assessments = dedupeAssessments(
       uniqueRows.map((row) =>
         toAssessment(

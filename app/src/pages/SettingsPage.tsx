@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState, lazy } from 'react'
 import { CardShell } from '@/components/common/CardShell'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
@@ -11,7 +11,9 @@ import {
   saveSubscriptionToSupabase,
   subscribeToPush,
 } from '@/lib/push'
-import { IntegrationsSection } from './IntegrationsSection'
+const IntegrationsSection = lazy(() =>
+  import('./IntegrationsSection').then((mod) => ({ default: mod.IntegrationsSection }))
+)
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
 
@@ -123,7 +125,9 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <IntegrationsSection />
+      <Suspense fallback={<div className="h-32 rounded-lg bg-muted/40" aria-hidden />}>
+        <IntegrationsSection />
+      </Suspense>
 
       <CardShell title={t('settings.focusWindow')}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

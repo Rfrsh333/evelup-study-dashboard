@@ -1,0 +1,16 @@
+{
+  "name": "levelup-study-dashboard-root",
+  "private": true,
+  "scripts": {
+    "preinstall": "echo \"[root] Use root scripts; app dependencies are managed in app/. Avoid running npm ci in root.\"",
+    "dev": "npm --prefix app run dev",
+    "dev:e2e": "npm --prefix app run dev:e2e",
+    "build": "npm --prefix app run build",
+    "test": "npm --prefix app run test:run",
+    "lint": "node -e \"const p=require('./app/package.json'); if(!p.scripts||!p.scripts.lint){console.log('No lint script in app/, skipping.'); process.exit(0)}\" && npm --prefix app run lint",
+    "cypress:run": "npm --prefix app run cypress:run",
+    "e2e": "npm --prefix app run e2e",
+    "e2e:dashboard": "npm --prefix app run e2e:dashboard",
+    "ci": "npm --prefix app run build && npm --prefix app run test:run"
+  }
+}

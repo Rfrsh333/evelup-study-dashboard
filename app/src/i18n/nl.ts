@@ -181,10 +181,42 @@ export const nl = {
   integrations: {
     header: 'Koppelingen',
     explainer: 'Brightspace synchroniseert deadlines en cijfers. Agenda-import voegt deadlines toe.',
-    onboarding: {
-      title: 'Brightspace import (beta)',
-      subtitle: 'Importeer deadlines (ICS) en cijfers (CSV) in twee snelle stappen.',
-      step: 'Stap {step}',
+    startHere: {
+      title: 'Koppel je data in 2 minuten',
+      subtitle:
+        'Zodra je rooster en cijfers binnen zijn, maakt LevelUp je week overzichtelijk en laat het zien wat je moet doen om te slagen.',
+      progress: '{count}/2 gekoppeld',
+      stepSchedule: 'Rooster importeren (ICS)',
+      stepGrades: 'Cijfers importeren (PDF/CSV)',
+    },
+    step: {
+      done: 'Voltooid',
+    },
+    steps: {
+      valueTitle: 'Wat krijg je?',
+      schedule: {
+        title: 'Stap 1 — Rooster importeren',
+        value: 'Je lessen/afspraken komen in Week. Je krijgt focusblok-voorstellen rond je rooster.',
+        ctaImport: 'Importeer rooster (ICS)',
+        ctaViewWeek: 'Bekijk Week',
+      },
+      grades: {
+        title: 'Stap 2 — Cijfers importeren',
+        value: 'Blokoverzicht (Voldaan/Open) + voorspelling/benodigd cijfer per vak.',
+        tabPdf: 'PDF (aanrader)',
+        tabCsv: 'CSV (alternatief)',
+        ctaViewDashboard: 'Bekijk Dashboard',
+      },
+    },
+    faq: {
+      ics: {
+        title: 'Hoe kom ik aan een ICS?',
+        body: 'Ga naar je rooster/agenda en exporteer als .ics. Lukt het niet? Vraag je opleiding naar een ICS-link.',
+      },
+      grades: {
+        title: 'Hoe exporteer ik cijfers?',
+        body: 'Download in Brightspace de Progress Summary (PDF) of exporteer een CSV met cijfers.',
+      },
     },
     brightspace: {
       title: 'Brightspace',

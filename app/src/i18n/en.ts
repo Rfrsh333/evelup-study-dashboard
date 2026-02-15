@@ -181,10 +181,42 @@ export const en = {
   integrations: {
     header: 'Integrations',
     explainer: 'Brightspace syncs deadlines and grades. Calendar import adds upcoming deadlines.',
-    onboarding: {
-      title: 'Brightspace import (beta)',
-      subtitle: 'Import deadlines (ICS) and grades (CSV) in two quick steps.',
-      step: 'Step {step}',
+    startHere: {
+      title: 'Connect your data in 2 minutes',
+      subtitle:
+        'Once your schedule and grades are in, LevelUp organizes your week and shows what you need to do to pass.',
+      progress: '{count}/2 connected',
+      stepSchedule: 'Import schedule (ICS)',
+      stepGrades: 'Import grades (PDF/CSV)',
+    },
+    step: {
+      done: 'Completed',
+    },
+    steps: {
+      valueTitle: 'What do you get?',
+      schedule: {
+        title: 'Step 1 — Import schedule',
+        value: 'Your classes show up in Week. You get focus block suggestions around your schedule.',
+        ctaImport: 'Import schedule (ICS)',
+        ctaViewWeek: 'View Week',
+      },
+      grades: {
+        title: 'Step 2 — Import grades',
+        value: 'Block overview (Passed/Open) + predicted/required grade per course.',
+        tabPdf: 'PDF (recommended)',
+        tabCsv: 'CSV (alternative)',
+        ctaViewDashboard: 'View Dashboard',
+      },
+    },
+    faq: {
+      ics: {
+        title: 'How do I get an ICS?',
+        body: 'Export your schedule/agenda as .ics. If you can’t find it, ask your program for an ICS link.',
+      },
+      grades: {
+        title: 'How do I export grades?',
+        body: 'Download the Brightspace Progress Summary (PDF) or export a CSV of grades.',
+      },
     },
     brightspace: {
       title: 'Brightspace',

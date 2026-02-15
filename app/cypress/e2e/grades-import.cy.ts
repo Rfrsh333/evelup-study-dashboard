@@ -17,6 +17,7 @@ describe('Grades Import - CSV Flow', () => {
   it('should have CSV upload option', () => {
     cy.getByTestId('start-here-import-grades').click()
     cy.getByTestId('grades-import-panel').should('be.visible')
+    cy.contains('button', 'CSV').click()
     cy.getByTestId('grades-import-file-input').should('exist')
   })
 

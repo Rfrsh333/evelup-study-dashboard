@@ -16,7 +16,9 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --browser chrome",
     "cypress:run:single": "cypress run --browser chrome --spec \"cypress/e2e/dashboard.cy.ts\"",
-    "dev:e2e": "VITE_E2E=true vite"
+    "dev:e2e": "VITE_E2E=true vite --host --port 5173",
+    "e2e": "start-server-and-test \"npm run dev:e2e\" http://localhost:5173 \"npm run cypress:run\"",
+    "e2e:dashboard": "start-server-and-test \"npm run dev:e2e\" http://localhost:5173 \"cypress run --browser chrome --spec cypress/e2e/dashboard.cy.ts\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
@@ -54,6 +56,7 @@
     "postcss": "^8.5.6",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "start-server-and-test": "^2.1.3",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",

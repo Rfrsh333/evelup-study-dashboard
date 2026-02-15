@@ -34,17 +34,51 @@ jobs:
         run: npm ci
 
       - name: Lint
+        id: lint
         run: |
           if grep -q '"lint"' package.json; then
             npm run lint || exit 1
+            echo "ran=true" >> $GITHUB_OUTPUT
           else
             echo "⚠️ No lint script found, skipping..."
+            echo "ran=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Run unit tests
-        run: npm run test:run -- --reporter=default --passWithNoTests=false
+        id: test
+        run: |
+          START_TIME=$(date +%s)
+          npm run test:run -- --reporter=default --passWithNoTests=false 2>&1 | tee test-output.txt
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
+
+          # Extract test count (simple grep, adjust if needed)
+          TEST_COUNT=$(grep -oP '\d+ passed' test-output.txt | head -1 || echo "N/A")
+          echo "count=$TEST_COUNT" >> $GITHUB_OUTPUT
         env:
           CI: true
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## ✅ Quality Check"
+            echo ""
+            echo "**Node:** 20"
+            echo "**Duration:** ${{ steps.test.outputs.duration }}"
+            echo ""
+            echo "### Lint"
+            if [ "${{ steps.lint.outputs.ran }}" = "true" ]; then
+              echo "✅ Passed"
+            else
+              echo "⚠️ Skipped (no lint script)"
+            fi
+            echo ""
+            echo "### Unit Tests"
+            echo "**Result:** ${{ steps.test.outputs.count }}"
+            echo "**Command:** \`npm run test:run -- --reporter=default --passWithNoTests=false\`"
+          } >> $GITHUB_STEP_SUMMARY
 
   build:
     name: Build
@@ -65,7 +99,38 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        id: build
+        run: |
+          START_TIME=$(date +%s)
+          npm run build 2>&1 | tee build-output.txt
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
+
+          # Check for large chunks warning
+          if grep -q "chunk size" build-output.txt; then
+            echo "has_warnings=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_warnings=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## 🏗️ Build"
+            echo ""
+            echo "**Node:** 20"
+            echo "**Duration:** ${{ steps.build.outputs.duration }}"
+            echo ""
+            if [ "${{ steps.build.outputs.has_warnings }}" = "true" ]; then
+              echo "⚠️ **Build completed with warnings** (check logs for chunk size warnings)"
+            else
+              echo "✅ **Build completed successfully**"
+            fi
+            echo ""
+            echo "**Command:** \`npm run build\`"
+          } >> $GITHUB_STEP_SUMMARY
 
   e2e:
     name: E2E (Shard ${{ matrix.shard }}/4)
@@ -109,23 +174,35 @@ jobs:
         run: npx wait-on http://127.0.0.1:5173 --timeout 60000
 
       - name: Run Cypress E2E tests
+        id: cypress
         run: |
+          START_TIME=$(date +%s)
+
           # Check if Cypress Cloud recording is available
           if [ -n "$CYPRESS_RECORD_KEY" ]; then
             echo "🎬 Running with Cypress Cloud (parallel mode)"
             npx cypress run --record --parallel \
               --ci-build-id "${{ github.run_id }}-${{ github.run_attempt }}" \
-              --group "e2e-shard${{ matrix.shard }}"
+              --group "e2e-shard${{ matrix.shard }}" 2>&1 | tee cypress-output.txt
+            echo "mode=cloud" >> $GITHUB_OUTPUT
           else
             echo "🔧 Running with local spec splitting (shard ${{ matrix.shard }}/4)"
             SPECS=$(node scripts/split-cypress-specs.mjs --shards 4 --shard ${{ matrix.shard }})
             if [ -z "$SPECS" ]; then
               echo "ℹ️ No specs for shard ${{ matrix.shard }}"
+              echo "spec_count=0" >> $GITHUB_OUTPUT
               exit 0
             fi
+            SPEC_COUNT=$(echo "$SPECS" | tr ',' '\n' | wc -l)
+            echo "spec_count=$SPEC_COUNT" >> $GITHUB_OUTPUT
             echo "📋 Running specs: $SPECS"
-            npx cypress run --spec "$SPECS"
+            npx cypress run --spec "$SPECS" 2>&1 | tee cypress-output.txt
+            echo "mode=local" >> $GITHUB_OUTPUT
           fi
+
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
@@ -150,3 +227,27 @@ jobs:
           path: app/cypress/videos
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## 🧪 E2E Tests (Shard ${{ matrix.shard }}/4)"
+            echo ""
+            echo "**Node:** 20"
+            echo "**Duration:** ${{ steps.cypress.outputs.duration }}"
+            echo "**Mode:** ${{ steps.cypress.outputs.mode }}"
+            echo ""
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅ **All tests passed**"
+            else
+              echo "❌ **Tests failed**"
+              echo ""
+              echo "📸 [Screenshots](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)"
+              echo "🎥 [Videos](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)"
+            fi
+            if [ -n "${{ steps.cypress.outputs.spec_count }}" ] && [ "${{ steps.cypress.outputs.spec_count }}" != "0" ]; then
+              echo ""
+              echo "**Specs in shard:** ${{ steps.cypress.outputs.spec_count }}"
+            fi
+          } >> $GITHUB_STEP_SUMMARY

@@ -405,6 +405,21 @@ export const en = {
       step2: 'Import your block progress (PDF/CSV)',
       step3: 'Plan your focus block for today',
     },
+    startHere: {
+      title: 'Start here',
+      subtitle: 'In 2 minutes you’ll know what to do today to pass.',
+      compact: 'Check your week or import more data to plan faster.',
+      bullets: {
+        importCalendar: 'Import your schedule → see your week',
+        importGrades: 'Import your grades → see what you need to score',
+        makeFocusBlocks: 'Create focus blocks to get it done',
+      },
+      cta: {
+        importCalendar: 'Import schedule',
+        importGrades: 'Import grades',
+        viewWeek: 'View week',
+      },
+    },
   },
 
   system: {

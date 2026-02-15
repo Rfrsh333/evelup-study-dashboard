@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CardShell } from '@/components/common/CardShell'
 import { useTranslation } from '@/i18n'
 import { useAppState } from '@/app/AppStateProvider'
@@ -64,7 +64,8 @@ const BLOCK_LABEL_KEY = 'levelup-block-label'
 
 export function IntegrationsSection() {
   const { t, ready } = useTranslation()
-  const { addPersonalEvent, addSchoolDeadline, addAssessment, state, dbUnavailable } = useAppState()
+  const { addSchoolDeadline, addAssessment, importPersonalEvents, state, dbUnavailable } =
+    useAppState()
   const { user } = useAuth()
   const { addToast } = useToast()
   const [icsStatus, setIcsStatus] = useState<string | null>(null)
@@ -80,6 +81,7 @@ export function IntegrationsSection() {
     keptTotal: number
     pastDroppedCount: number
     outOfRangeCount: number
+    invalidDates: number
     windowStart: string
     windowEnd: string
   } | null>(null)
@@ -103,6 +105,30 @@ export function IntegrationsSection() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
 
+  useEffect(() => {
+    const focusFromHash = () => {
+      const hash = window.location.hash.replace('#', '')
+      if (hash === 'calendar') {
+        document.getElementById('calendar-import')?.scrollIntoView({ behavior: 'smooth' })
+      }
+      if (hash === 'grades') {
+        document.getElementById('grades-import')?.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ view?: string; focus?: string }>).detail
+      if (detail?.view === 'settings' && detail.focus) {
+        window.location.hash = detail.focus === 'calendar' ? '#calendar' : '#grades'
+        focusFromHash()
+      }
+    }
+
+    focusFromHash()
+    window.addEventListener('app:navigate', handler)
+    return () => window.removeEventListener('app:navigate', handler)
+  }, [])
+
 
   const csvHasData = csvHeaders.length > 0 && csvRows.length > 0
 
@@ -117,9 +143,19 @@ export function IntegrationsSection() {
       console.debug('ICS parse debug', {
         parsedTotal: result.debug.parsedTotal,
         keptTotal: result.debug.keptTotal,
+        invalidDates: result.debug.invalidDates,
         windowStart: result.debug.windowStart,
         windowEnd: result.debug.windowEnd,
       })
+    }
+
+    if (result.debug.parsedTotal > 0 && result.debug.keptTotal === 0) {
+      setIcsError(
+        t('integrations.calendar.errorOutOfWindow', {
+          count: result.debug.parsedTotal,
+        })
+      )
+      return
     }
 
     if (result.error) {
@@ -133,15 +169,7 @@ export function IntegrationsSection() {
     }
 
     if (result.events.length === 0) {
-      if (result.debug.parsedTotal > 0 && result.debug.keptTotal === 0) {
-        setIcsError(
-          t('integrations.calendar.errorOutOfWindow', {
-            count: result.debug.parsedTotal,
-          })
-        )
-      } else {
-        setIcsError(t('integrations.calendar.errorEmpty'))
-      }
+      setIcsError(t('integrations.calendar.errorEmpty'))
       return
     }
 
@@ -418,7 +446,7 @@ export function IntegrationsSection() {
       })
     }
 
-    nextPersonal.forEach(({ event }) => addPersonalEvent(event))
+    importPersonalEvents(nextPersonal.map(({ uid, event }) => ({ ...event, uid })))
     nextDeadlines.forEach(({ event }) => addSchoolDeadline(event))
 
     const importedCount = nextPersonal.length + nextDeadlines.length
@@ -508,16 +536,17 @@ export function IntegrationsSection() {
         </div>
       </CardShell>
 
-      <CardShell
-        title={t('integrations.steps.schedule.title')}
-        action={
-          onboarding.scheduleDone ? (
-            <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs">
-              {t('integrations.step.done')}
-            </span>
-          ) : null
-        }
-      >
+      <div id="calendar-import">
+        <CardShell
+          title={t('integrations.steps.schedule.title')}
+          action={
+            onboarding.scheduleDone ? (
+              <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs">
+                {t('integrations.step.done')}
+              </span>
+            ) : null
+          }
+        >
         <div className="rounded-md border border-border/60 bg-muted/30 p-3">
           <div className="text-xs font-semibold uppercase text-muted-foreground">
             {t('integrations.steps.valueTitle')}
@@ -669,18 +698,20 @@ export function IntegrationsSection() {
           </summary>
           <p className="mt-2">{t('integrations.faq.ics.body')}</p>
         </details>
-      </CardShell>
+        </CardShell>
+      </div>
 
-      <CardShell
-        title={t('integrations.steps.grades.title')}
-        action={
-          onboarding.gradesDone ? (
-            <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs">
-              {t('integrations.step.done')}
-            </span>
-          ) : null
-        }
-      >
+      <div id="grades-import">
+        <CardShell
+          title={t('integrations.steps.grades.title')}
+          action={
+            onboarding.gradesDone ? (
+              <span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-xs">
+                {t('integrations.step.done')}
+              </span>
+            ) : null
+          }
+        >
         <div className="rounded-md border border-border/60 bg-muted/30 p-3">
           <div className="text-xs font-semibold uppercase text-muted-foreground">
             {t('integrations.steps.valueTitle')}
@@ -1074,7 +1105,8 @@ export function IntegrationsSection() {
           </summary>
           <p className="mt-2">{t('integrations.faq.grades.body')}</p>
         </details>
-      </CardShell>
+        </CardShell>
+      </div>
     </div>
   )
 }

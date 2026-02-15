@@ -36,6 +36,7 @@ import { checkSupabaseHealth } from '@/lib/supabase-health'
 import { calculatePercentile } from '@/domain/percentile'
 import { makeId } from '@/lib/id'
 import { fetchAssessmentsSafe } from '@/lib/assessments'
+import { toDate, toIso } from '@/lib/datetime'
 
 interface AppStateContextValue {
   // Core state
@@ -46,6 +47,7 @@ interface AppStateContextValue {
   // Actions
   addSchoolDeadline: (deadline: Omit<SchoolDeadline, 'id' | 'createdAt'>) => void
   addPersonalEvent: (event: Omit<PersonalEvent, 'id'>) => void
+  importPersonalEvents: (events: Array<Omit<PersonalEvent, 'id'> & { uid?: string }>) => void
   addAssessment: (assessment: Omit<Assessment, 'id'>) => void
   updateDeadline: (id: string, updates: Partial<SchoolDeadline>) => void
   completeDeadline: (id: string) => void
@@ -71,6 +73,81 @@ interface AppStateContextValue {
 }
 
 const AppStateContext = createContext<AppStateContextValue | undefined>(undefined)
+
+type PersonalEventInput = Omit<PersonalEvent, 'id'> & { id?: string; uid?: string }
+
+function normalizePersonalEvent(event: PersonalEventInput, fallbackId?: string): PersonalEvent | null {
+  const start = toDate(event.start)
+  if (!start) return null
+  const end = toDate(event.end) ?? new Date(start.getTime() + 60 * 60 * 1000)
+  return {
+    id: event.id ?? fallbackId ?? makeId('pe'),
+    title: event.title,
+    start,
+    end,
+    source: event.source,
+    tag: event.tag,
+  }
+}
+
+function personalEventKey(event: PersonalEventInput): string {
+  const start = toDate(event.start)
+  const startIso = start ? toIso(start) : 'invalid'
+  if (event.uid) return event.uid
+  return `${event.source}|${startIso}|${event.title}`
+}
+
+function mergePersonalEvents(
+  existing: PersonalEvent[],
+  incoming: PersonalEventInput[]
+): { merged: PersonalEvent[]; invalidDates: number } {
+  const map = new Map<string, PersonalEvent>()
+  let invalidDates = 0
+
+  existing.forEach((event) => {
+    const normalized = normalizePersonalEvent(event, event.id)
+    if (!normalized) {
+      invalidDates += 1
+      return
+    }
+    map.set(personalEventKey(normalized), normalized)
+  })
+
+  incoming.forEach((event) => {
+    const normalized = normalizePersonalEvent(event)
+    if (!normalized) {
+      invalidDates += 1
+      return
+    }
+    const key = personalEventKey({ ...normalized, uid: event.uid })
+    if (!map.has(key)) {
+      map.set(key, normalized)
+    }
+  })
+
+  const merged = Array.from(map.values()).sort((a, b) => a.start.getTime() - b.start.getTime())
+  return { merged, invalidDates }
+}
+
+function normalizeDeadline(deadline: SchoolDeadline): SchoolDeadline | null {
+  const date = toDate(deadline.deadline)
+  const createdAt = toDate(deadline.createdAt)
+  if (!date || !createdAt) return null
+  return {
+    ...deadline,
+    deadline: date,
+    createdAt,
+    completedAt: deadline.completedAt ? toDate(deadline.completedAt) ?? undefined : undefined,
+  }
+}
+
+function normalizeState(state: AppState): AppState {
+  const deadlines = state.schoolDeadlines
+    .map((dl) => normalizeDeadline(dl))
+    .filter((dl): dl is SchoolDeadline => Boolean(dl))
+  const { merged: personalEvents } = mergePersonalEvents(state.personalEvents, [])
+  return { ...state, schoolDeadlines: deadlines, personalEvents }
+}
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(getDefaultAppState)
@@ -112,7 +189,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (dbUnavailable) {
         try {
           const localState = loadAppState()
-          if (!cancelled) setState(localState)
+          if (!cancelled) setState(normalizeState(localState))
         } catch (error) {
           if (!cancelled) {
             console.error('Error loading local state:', error)
@@ -133,7 +210,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false)
         try {
           const localState = loadAppState()
-          if (!cancelled) setState(localState)
+          if (!cancelled) setState(normalizeState(localState))
         } catch (error) {
           if (!cancelled) {
             console.error('Error loading local state:', error)
@@ -157,14 +234,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setLoading(false)
         try {
           const supabaseState = await loadAppStateFromSupabase()
-          if (!cancelled) setState(supabaseState)
+          if (!cancelled) setState(normalizeState(supabaseState))
         } catch (error) {
           if (!cancelled) {
             if (error instanceof SupabaseTableMissingError) {
               setDbUnavailable(true)
               setGlobalDbUnavailable(true)
               const localState = loadAppState()
-              setState(localState)
+              setState(normalizeState(localState))
             } else {
               console.error('Error loading Supabase state:', error)
               setState(getDefaultAppState())
@@ -179,7 +256,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(false)
       try {
         const localState = loadAppState()
-        if (!cancelled) setState(localState)
+        if (!cancelled) setState(normalizeState(localState))
       } catch (error) {
         if (!cancelled) {
           console.error('Error loading local state:', error)
@@ -426,7 +503,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const addSchoolDeadline = useCallback((deadline: Omit<SchoolDeadline, 'id' | 'createdAt'>) => {
     const normalizedDeadline = {
       ...deadline,
-      deadline: deadline.deadline instanceof Date ? deadline.deadline : new Date(deadline.deadline),
+      deadline: toDate(deadline.deadline) ?? new Date(),
     }
     const newDeadline: SchoolDeadline = {
       ...normalizedDeadline,
@@ -450,29 +527,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addPersonalEvent = useCallback((event: Omit<PersonalEvent, 'id'>) => {
-    const normalizedEvent = {
-      ...event,
-      start: event.start instanceof Date ? event.start : new Date(event.start),
-      end: event.end ? (event.end instanceof Date ? event.end : new Date(event.end)) : event.end,
-    }
-    const newEvent: PersonalEvent = {
-      ...normalizedEvent,
-      id: makeId('pe'),
-    }
     setState((prev) => {
-      const next = {
-        ...prev,
-        personalEvents: [...prev.personalEvents, newEvent],
-      }
+      const { merged, invalidDates } = mergePersonalEvents(prev.personalEvents, [event])
       if (import.meta.env.DEV) {
         console.debug('State after import: personalEvents', {
-          added: newEvent,
-          total: next.personalEvents.length,
+          added: event,
+          total: merged.length,
+          invalidDates,
         })
       }
-      return next
+      return { ...prev, personalEvents: merged }
     })
   }, [])
+
+  const importPersonalEvents = useCallback(
+    (events: Array<Omit<PersonalEvent, 'id'> & { uid?: string }>) => {
+      if (events.length === 0) return
+      setState((prev) => {
+        const { merged, invalidDates } = mergePersonalEvents(prev.personalEvents, events)
+        if (import.meta.env.DEV) {
+          console.debug('ICS import merge', {
+            incoming: events.length,
+            total: merged.length,
+            invalidDates,
+          })
+        }
+        return { ...prev, personalEvents: merged }
+      })
+    },
+    []
+  )
 
   const addAssessment = useCallback((assessment: Omit<Assessment, 'id'>) => {
     const newAssessment: Assessment = {
@@ -703,6 +787,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     dbUnavailable,
     addSchoolDeadline,
     addPersonalEvent,
+    importPersonalEvents,
     addAssessment,
     updateDeadline,
     completeDeadline,

@@ -4,7 +4,7 @@ import { getTodayPriorities, getWeekPreviewItems } from '@/domain/overview'
 import { pickBestFocusWindow, getBusyIntervalsForDay, getFreeWindows } from '@/domain/schedule'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
-import { StartHereCard } from '@/components/features/home/StartHereCard'
+import { StartHereCard } from '@/components/common/StartHereCard'
 import { TodayPrioritiesCard } from '@/components/features/home/TodayPrioritiesCard'
 import { FocusBlockCard } from '@/components/features/home/FocusBlockCard'
 import { WeekPreviewCard } from '@/components/features/home/WeekPreviewCard'
@@ -128,6 +128,7 @@ export function DashboardPage() {
       </header>
 
       {!hasAnyData && <StartHereCard />}
+      {hasAnyData && <StartHereCard compact />}
 
       {hasAnyData && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

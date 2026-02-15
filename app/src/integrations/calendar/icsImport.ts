@@ -1,5 +1,6 @@
 import type { PersonalEvent, SchoolDeadline } from '@/domain/types'
 import ICAL from 'ical.js'
+import { toDate } from '@/lib/datetime'
 
 export interface NormalizedIcsEvent {
   uid: string
@@ -29,6 +30,7 @@ export type IcsParseResult = {
     keptTotal: number
     pastDroppedCount: number
     outOfRangeCount: number
+    invalidDates: number
     windowStart: string
     windowEnd: string
   }
@@ -108,6 +110,7 @@ export function parseIcs(text: string): IcsParseResult {
         keptTotal: 0,
         pastDroppedCount: 0,
         outOfRangeCount: 0,
+        invalidDates: 0,
         windowStart: windowStart.toISOString(),
         windowEnd: windowEnd.toISOString(),
       },
@@ -117,6 +120,7 @@ export function parseIcs(text: string): IcsParseResult {
   const vevents = component.getAllSubcomponents('vevent')
   const veventCount = vevents.length
   const events: NormalizedIcsEvent[] = []
+  let invalidDates = 0
 
   vevents.forEach((vevent) => {
     try {
@@ -136,9 +140,10 @@ export function parseIcs(text: string): IcsParseResult {
         return
       }
 
-      const start = dtstart.toJSDate()
-      if (Number.isNaN(start.getTime())) {
+      const start = toDate(dtstart.toJSDate())
+      if (!start) {
         parseErrors.push(`Invalid DTSTART for ${uid}`)
+        invalidDates += 1
         return
       }
 
@@ -146,8 +151,8 @@ export function parseIcs(text: string): IcsParseResult {
 
       let end: Date | null = null
       if (dtend) {
-        const endDate = dtend.toJSDate()
-        if (!Number.isNaN(endDate.getTime())) end = endDate
+        const endDate = toDate(dtend.toJSDate())
+        if (endDate) end = endDate
       }
 
       if (!end) {
@@ -186,6 +191,7 @@ export function parseIcs(text: string): IcsParseResult {
         keptTotal: 0,
         pastDroppedCount: 0,
         outOfRangeCount: 0,
+        invalidDates,
         windowStart: windowStart.toISOString(),
         windowEnd: windowEnd.toISOString(),
       },
@@ -223,6 +229,7 @@ export function parseIcs(text: string): IcsParseResult {
         keptTotal: 0,
         pastDroppedCount,
         outOfRangeCount,
+        invalidDates,
         windowStart: windowStart.toISOString(),
         windowEnd: windowEnd.toISOString(),
       },
@@ -239,6 +246,7 @@ export function parseIcs(text: string): IcsParseResult {
       keptTotal: filtered.length,
       pastDroppedCount,
       outOfRangeCount,
+      invalidDates,
       windowStart: windowStart.toISOString(),
       windowEnd: windowEnd.toISOString(),
     },

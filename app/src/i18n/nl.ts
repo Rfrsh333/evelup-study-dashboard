@@ -405,6 +405,21 @@ export const nl = {
       step2: 'Importeer je blokvoortgang (PDF/CSV)',
       step3: 'Maak je focusblok voor vandaag',
     },
+    startHere: {
+      title: 'Start hier',
+      subtitle: 'In 2 minuten weet je wat je vandaag moet doen om te slagen.',
+      compact: 'Bekijk je week of importeer extra data om sneller te plannen.',
+      bullets: {
+        importCalendar: 'Importeer je rooster → zie je week',
+        importGrades: 'Importeer je cijfers → zie wat je moet halen',
+        makeFocusBlocks: 'Maak focusblokken om het af te maken',
+      },
+      cta: {
+        importCalendar: 'Importeer rooster',
+        importGrades: 'Importeer cijfers',
+        viewWeek: 'Bekijk week',
+      },
+    },
   },
 
   system: {

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAppState } from '@/app/AppStateProvider'
 import { CardShell } from '@/components/common/CardShell'
 import { useTranslation } from '@/i18n'
+import { toDate } from '@/lib/datetime'
 
 type WeekFilter = 'school' | 'personal'
 
@@ -13,23 +14,40 @@ export function WeekPage() {
   const now = new Date()
   const windowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
   const windowEnd = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)
-  const personalInWindow = state.personalEvents.filter(
-    (ev) => ev.start >= windowStart && ev.start <= windowEnd
+  const normalizedPersonal = useMemo(
+    () =>
+      state.personalEvents
+        .map((ev) => ({
+          ...ev,
+          start: toDate(ev.start),
+          end: toDate(ev.end),
+        }))
+        .filter((ev) => Boolean(ev.start)),
+    [state.personalEvents]
   )
-  const schoolInWindow = state.schoolDeadlines.filter(
-    (dl) => dl.deadline >= windowStart && dl.deadline <= windowEnd
+  const normalizedSchool = useMemo(
+    () =>
+      state.schoolDeadlines
+        .map((dl) => ({
+          ...dl,
+          deadline: toDate(dl.deadline),
+        }))
+        .filter((dl) => Boolean(dl.deadline)),
+    [state.schoolDeadlines]
+  )
+  const personalInWindow = normalizedPersonal.filter(
+    (ev) => (ev.start as Date) >= windowStart && (ev.start as Date) <= windowEnd
+  )
+  const schoolInWindow = normalizedSchool.filter(
+    (dl) => (dl.deadline as Date) >= windowStart && (dl.deadline as Date) <= windowEnd
   )
   const personalVisible = filter === 'personal' ? personalInWindow : []
   const schoolVisible = filter === 'school' ? schoolInWindow : []
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      const invalidPersonal = state.personalEvents.filter((ev) =>
-        Number.isNaN(ev.start?.getTime?.() ?? NaN)
-      ).length
-      const invalidSchool = state.schoolDeadlines.filter((dl) =>
-        Number.isNaN(dl.deadline?.getTime?.() ?? NaN)
-      ).length
+      const invalidPersonal = state.personalEvents.filter((ev) => !toDate(ev.start)).length
+      const invalidSchool = state.schoolDeadlines.filter((dl) => !toDate(dl.deadline)).length
       console.debug('Week view window', {
         windowStart: windowStart.toISOString(),
         windowEnd: windowEnd.toISOString(),

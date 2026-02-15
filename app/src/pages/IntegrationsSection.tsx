@@ -411,6 +411,13 @@ export function IntegrationsSection() {
       return !existingDeadlines.has(key) && !existingDeadlines.has(fallbackKey)
     })
 
+    if (import.meta.env.DEV) {
+      console.debug('ICS imported events:', {
+        personal: nextPersonal.length,
+        school: nextDeadlines.length,
+      })
+    }
+
     nextPersonal.forEach(({ event }) => addPersonalEvent(event))
     nextDeadlines.forEach(({ event }) => addSchoolDeadline(event))
 

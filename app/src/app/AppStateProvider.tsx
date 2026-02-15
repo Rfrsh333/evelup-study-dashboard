@@ -424,27 +424,54 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // Actions
   const addSchoolDeadline = useCallback((deadline: Omit<SchoolDeadline, 'id' | 'createdAt'>) => {
-    const newDeadline: SchoolDeadline = {
+    const normalizedDeadline = {
       ...deadline,
+      deadline: deadline.deadline instanceof Date ? deadline.deadline : new Date(deadline.deadline),
+    }
+    const newDeadline: SchoolDeadline = {
+      ...normalizedDeadline,
       id: makeId('dl'),
       createdAt: new Date(),
     }
-    setState((prev) => ({
-      ...prev,
-      schoolDeadlines: [...prev.schoolDeadlines, newDeadline],
-    }))
+    setState((prev) => {
+      const next = {
+        ...prev,
+        schoolDeadlines: [...prev.schoolDeadlines, newDeadline],
+      }
+      if (import.meta.env.DEV) {
+        console.debug('State after import: schoolDeadlines', {
+          added: newDeadline,
+          total: next.schoolDeadlines.length,
+        })
+      }
+      return next
+    })
     trackEvent('deadline_added', { title: deadline.title })
   }, [])
 
   const addPersonalEvent = useCallback((event: Omit<PersonalEvent, 'id'>) => {
-    const newEvent: PersonalEvent = {
+    const normalizedEvent = {
       ...event,
+      start: event.start instanceof Date ? event.start : new Date(event.start),
+      end: event.end ? (event.end instanceof Date ? event.end : new Date(event.end)) : event.end,
+    }
+    const newEvent: PersonalEvent = {
+      ...normalizedEvent,
       id: makeId('pe'),
     }
-    setState((prev) => ({
-      ...prev,
-      personalEvents: [...prev.personalEvents, newEvent],
-    }))
+    setState((prev) => {
+      const next = {
+        ...prev,
+        personalEvents: [...prev.personalEvents, newEvent],
+      }
+      if (import.meta.env.DEV) {
+        console.debug('State after import: personalEvents', {
+          added: newEvent,
+          total: next.personalEvents.length,
+        })
+      }
+      return next
+    })
   }, [])
 
   const addAssessment = useCallback((assessment: Omit<Assessment, 'id'>) => {

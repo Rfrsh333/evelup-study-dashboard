@@ -24,6 +24,12 @@ export function WeekPage() {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
+      const invalidPersonal = state.personalEvents.filter((ev) =>
+        Number.isNaN(ev.start?.getTime?.() ?? NaN)
+      ).length
+      const invalidSchool = state.schoolDeadlines.filter((dl) =>
+        Number.isNaN(dl.deadline?.getTime?.() ?? NaN)
+      ).length
       console.debug('Week view window', {
         windowStart: windowStart.toISOString(),
         windowEnd: windowEnd.toISOString(),
@@ -31,9 +37,24 @@ export function WeekPage() {
         personalVisible: personalInWindow.length,
         schoolTotal: state.schoolDeadlines.length,
         schoolVisible: schoolInWindow.length,
+        invalidPersonal,
+        invalidSchool,
       })
     }
-  }, [state.personalEvents.length, state.schoolDeadlines.length, personalInWindow.length, schoolInWindow.length, windowStart, windowEnd])
+  }, [
+    state.personalEvents.length,
+    state.schoolDeadlines.length,
+    personalInWindow.length,
+    schoolInWindow.length,
+    windowStart,
+    windowEnd,
+  ])
+
+  useEffect(() => {
+    if (filter === 'school' && schoolInWindow.length === 0 && personalInWindow.length > 0) {
+      setFilter('personal')
+    }
+  }, [filter, personalInWindow.length, schoolInWindow.length])
 
   useEffect(() => {
     const count = Number(localStorage.getItem('levelup-new-personal-events') || '0')

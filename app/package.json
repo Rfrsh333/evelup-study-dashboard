@@ -14,7 +14,9 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run --browser chrome",
+    "cypress:run:single": "cypress run --browser chrome --spec \"cypress/e2e/dashboard.cy.ts\"",
+    "dev:e2e": "VITE_E2E=true vite"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",

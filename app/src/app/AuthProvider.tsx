@@ -22,8 +22,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const timeoutRef = useRef<number | undefined>(undefined)
+  const isE2E = import.meta.env.VITE_E2E === 'true' || Boolean((window as Window & { Cypress?: unknown }).Cypress)
 
   useEffect(() => {
+    if (isE2E) {
+      const mockUser = {
+        id: 'e2e-user',
+        email: 'e2e@levelup.test',
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+      } as User
+      setUser(mockUser)
+      setSession({ user: mockUser } as Session)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     let cancelled = false
     let resolved = false
 
@@ -81,10 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
       subscription.unsubscribe()
     }
-  }, [])
+  }, [isE2E])
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (isE2E) {
+        return { error: null }
+      }
       if (!isSupabaseConfigured) {
         return { error: new Error('Supabase is not configured') }
       }
@@ -111,6 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      if (isE2E) {
+        return { error: null }
+      }
       if (!isSupabaseConfigured) {
         return { error: new Error('Supabase is not configured') }
       }
@@ -125,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (isE2E) return
     if (!isSupabaseConfigured) return
     await supabase.auth.signOut()
   }

@@ -7,12 +7,13 @@ interface AppShellProps {
   children: ReactNode
   currentView: AppView
   onNavigate: (view: AppView) => void
+  showInsights?: boolean
 }
 
-export function AppShell({ children, currentView, onNavigate }: AppShellProps) {
+export function AppShell({ children, currentView, onNavigate, showInsights }: AppShellProps) {
   const viewLabel =
     currentView === 'dashboard'
-      ? 'Dashboard'
+      ? 'Vandaag'
       : currentView === 'week'
         ? 'Week'
         : currentView === 'insights'
@@ -21,7 +22,7 @@ export function AppShell({ children, currentView, onNavigate }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar currentView={currentView} onNavigate={onNavigate} />
+      <Sidebar currentView={currentView} onNavigate={onNavigate} showInsights={showInsights} />
       <div className="ml-64">
         <Header
           currentView={viewLabel}

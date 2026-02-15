@@ -65,7 +65,7 @@ function App() {
 
   // Show dashboard if logged in
   return (
-    <Layout currentView={currentView} onNavigate={setCurrentView}>
+    <Layout currentView={currentView} onNavigate={setCurrentView} showInsights={isAdmin}>
       {notices.length > 0 && <NoticeBanner messages={notices} />}
       <Suspense fallback={<LoadingScreen />}>
         {currentView === 'dashboard' && <DashboardPage />}

@@ -12,6 +12,15 @@ export default defineConfig({
     viewportWidth: 1280,
     viewportHeight: 720,
     defaultCommandTimeout: 10000,
+    // Strike-CI hardening: retry only in CI to reduce flakiness
+    retries: {
+      runMode: 1, // CI mode: 1 retry
+      openMode: 0, // Interactive mode: no retries (fail fast for dev)
+    },
+    // Increase timeouts for CI stability
+    pageLoadTimeout: 60000,
+    requestTimeout: 10000,
+    responseTimeout: 30000,
   },
   component: {
     devServer: {

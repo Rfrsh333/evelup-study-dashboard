@@ -48,7 +48,7 @@ jobs:
         id: test
         run: |
           START_TIME=$(date +%s)
-          npm run test:run -- --reporter=default --passWithNoTests=false 2>&1 | tee test-output.txt
+          npm run test:run -- --reporter=default --passWithNoTests=false --no-watch 2>&1 | tee test-output.txt
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
           echo "duration=${DURATION}s" >> $GITHUB_OUTPUT
@@ -58,6 +58,7 @@ jobs:
           echo "count=$TEST_COUNT" >> $GITHUB_OUTPUT
         env:
           CI: true
+          NODE_ENV: test
 
       - name: Write job summary
         if: always()
@@ -183,7 +184,8 @@ jobs:
             echo "🎬 Running with Cypress Cloud (parallel mode)"
             npx cypress run --record --parallel \
               --ci-build-id "${{ github.run_id }}-${{ github.run_attempt }}" \
-              --group "e2e-shard${{ matrix.shard }}" 2>&1 | tee cypress-output.txt
+              --group "e2e-shard${{ matrix.shard }}" \
+              --quiet 2>&1 | tee cypress-output.txt
             echo "mode=cloud" >> $GITHUB_OUTPUT
           else
             echo "🔧 Running with local spec splitting (shard ${{ matrix.shard }}/4)"
@@ -196,7 +198,7 @@ jobs:
             SPEC_COUNT=$(echo "$SPECS" | tr ',' '\n' | wc -l)
             echo "spec_count=$SPEC_COUNT" >> $GITHUB_OUTPUT
             echo "📋 Running specs: $SPECS"
-            npx cypress run --spec "$SPECS" 2>&1 | tee cypress-output.txt
+            npx cypress run --spec "$SPECS" --quiet 2>&1 | tee cypress-output.txt
             echo "mode=local" >> $GITHUB_OUTPUT
           fi
 
@@ -209,6 +211,10 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: anon_dummy
           CI: true
+          NODE_ENV: test
+          # Cypress strike-CI settings
+          ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
+          DEBUG: ''
 
       - name: Upload screenshots on failure
         if: failure()

@@ -19,6 +19,9 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined)
 const STORAGE_KEY = 'levelup-language'
 
+// Track missing keys in DEV to avoid spam (memoized)
+const missingKeys = new Set<string>()
+
 function getNestedValue(obj: any, path: string): string {
   const keys = path.split('.')
   let value = obj
@@ -27,6 +30,11 @@ function getNestedValue(obj: any, path: string): string {
     if (value && typeof value === 'object' && key in value) {
       value = value[key]
     } else {
+      // Missing key: warn once in DEV
+      if (import.meta.env.DEV && !missingKeys.has(path)) {
+        missingKeys.add(path)
+        console.warn(`[i18n] Missing translation key: "${path}"`)
+      }
       return path
     }
   }

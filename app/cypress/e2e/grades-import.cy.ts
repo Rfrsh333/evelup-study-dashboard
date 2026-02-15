@@ -1,20 +1,23 @@
 describe('Grades Import - CSV Flow', () => {
   beforeEach(() => {
-    cy.visit('/')
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should navigate to grades import from dashboard', () => {
-    cy.contains('button', 'Importeer cijfers').click()
+    cy.getByTestId('start-here-import-grades').click()
     cy.url().should('include', '#grades')
+    cy.getByTestId('grades-import-panel').should('be.visible')
   })
 
   it('should have CSV upload option', () => {
-    cy.contains('button', 'Importeer cijfers').click()
-
-    // Look for CSV tab or upload input
-    // cy.contains('CSV').click()
-    // cy.get('input[type="file"]').should('exist')
+    cy.getByTestId('start-here-import-grades').click()
+    cy.getByTestId('grades-import-panel').should('be.visible')
+    cy.getByTestId('grades-import-file-input').should('exist')
   })
 
   it('should parse CSV and show preview', () => {
@@ -55,15 +58,17 @@ describe('Grades Import - CSV Flow', () => {
 
 describe('Grades Import - PDF Flow', () => {
   beforeEach(() => {
-    cy.visit('/')
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should have PDF upload option', () => {
-    cy.contains('button', 'Importeer cijfers').click()
-
-    // Should have PDF tab
-    // cy.contains('PDF').should('be.visible')
+    cy.getByTestId('start-here-import-grades').click()
+    cy.getByTestId('grades-import-panel').should('be.visible')
   })
 
   it('should parse Brightspace PDF', () => {

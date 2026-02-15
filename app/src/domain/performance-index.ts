@@ -60,6 +60,11 @@ export interface PerformanceTrend {
   weekComparison: string // "vs last week"
 }
 
+export interface PerformanceMessage {
+  key: string
+  params?: Record<string, string | number>
+}
+
 /**
  * Calculate grade progression score (0-100)
  * Based on current weighted average and trajectory toward target
@@ -298,28 +303,42 @@ export function getPerformanceMessage(
   index: number,
   trend: PerformanceTrend,
   percentile?: number
-): string {
+): PerformanceMessage {
   const tier = getPerformanceTier(index)
+  const eliteThreshold = 85
+  const deltaToElite = Math.max(0, eliteThreshold - index)
 
   if (tier === 'elite' && percentile && percentile >= 90) {
-    return `You are outperforming ${percentile}% of active students this week.`
+    return { key: 'performance.message.win' }
   }
 
   if (tier === 'elite') {
-    return 'Elite performance secured. Maintain this standard.'
+    return { key: 'performance.message.eliteConsistency' }
   }
 
   if (tier === 'high-performer' && trend.direction === 'up') {
-    return 'Strong upward trajectory. Continue this momentum.'
+    return { key: 'performance.message.win' }
+  }
+
+  if (trend.direction === 'down' && index < 55) {
+    return { key: 'performance.message.hardDrop' }
   }
 
   if (trend.direction === 'down' && index < 70) {
-    return 'You lost momentum this week. Recover before Sunday.'
+    return { key: 'performance.message.drop' }
+  }
+
+  if (tier === 'high-performer' && deltaToElite <= 5 && deltaToElite > 0) {
+    return { key: 'performance.message.nearMiss', params: { delta: deltaToElite } }
   }
 
   if (tier === 'on-track') {
-    return 'Baseline maintained. Push harder to break into top tier.'
+    return { key: 'performance.message.steady' }
   }
 
-  return 'Critical performance gap detected. Immediate action required.'
+  if (trend.direction === 'down') {
+    return { key: 'performance.message.momentumRisk' }
+  }
+
+  return { key: 'performance.message.steady' }
 }

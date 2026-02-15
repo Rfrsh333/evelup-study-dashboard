@@ -1,19 +1,23 @@
 describe('ICS Import Flow', () => {
   beforeEach(() => {
-    cy.visit('/')
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should navigate to ICS import from dashboard', () => {
-    cy.contains('button', 'Importeer rooster').click()
+    cy.getByTestId('start-here-import-calendar').click()
     cy.url().should('include', '#calendar')
+    cy.getByTestId('ics-import-panel').should('be.visible')
   })
 
   it('should have file upload input for ICS', () => {
-    cy.contains('button', 'Importeer rooster').click()
-
-    // Look for file input (adjust selector based on your implementation)
-    // cy.get('input[type="file"]').should('exist')
+    cy.getByTestId('start-here-import-calendar').click()
+    cy.getByTestId('ics-import-panel').should('be.visible')
+    cy.getByTestId('ics-import-file-input').should('exist')
   })
 
   it('should show preview after ICS upload', () => {

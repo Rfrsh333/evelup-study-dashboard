@@ -97,7 +97,7 @@ export function BlockProgressCard() {
                   <div key={key} className="flex items-center justify-between text-xs">
                   <span className="truncate">{assessment.item}</span>
                   <span className="rounded-full bg-muted px-2 py-1 text-[10px] uppercase tracking-wide">
-                    {t('blockProgress.status.pending')}
+                    {t('blocks.status.pending')}
                   </span>
                 </div>
                 )

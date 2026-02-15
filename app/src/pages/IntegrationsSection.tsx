@@ -278,8 +278,9 @@ export function IntegrationsSection() {
       }
     }
 
-    setCsvStatus(t('integrations.csv.imported', { count: assessments.length }))
-    addToast({ message: t('integrations.csv.imported', { count: assessments.length }) })
+    const csvMessage = `${t('integrations.csv.imported', { count: assessments.length })} · ${t('integrations.import.success')}`
+    setCsvStatus(csvMessage)
+    addToast({ message: csvMessage })
     localStorage.setItem('levelup-new-assessments', '1')
     setCsvStep('map')
   }
@@ -367,7 +368,9 @@ export function IntegrationsSection() {
       }
     }
 
-    addToast({ message: t('integrations.pdf.imported', { count: assessments.length }) })
+    addToast({
+      message: `${t('integrations.pdf.imported', { count: assessments.length })} · ${t('integrations.import.success')}`,
+    })
     localStorage.setItem('levelup-new-assessments', '1')
     window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'dashboard' } }))
   }
@@ -456,9 +459,13 @@ export function IntegrationsSection() {
       return
     }
 
-    setIcsStatus(t('integrations.calendar.imported', { count: importedCount }))
+    setIcsStatus(
+      `${t('integrations.calendar.imported', { count: importedCount })} · ${t('integrations.import.success')}`
+    )
     localStorage.setItem('levelup-new-personal-events', String(nextPersonal.length))
-    addToast({ message: t('integrations.calendar.imported', { count: importedCount }) })
+    addToast({
+      message: `${t('integrations.calendar.imported', { count: importedCount })} · ${t('integrations.import.success')}`,
+    })
     window.dispatchEvent(
       new CustomEvent('app:navigate', {
         detail: { view: 'week', focusTab: nextPersonal.length > 0 ? 'personal' : 'school' },
@@ -536,7 +543,7 @@ export function IntegrationsSection() {
         </div>
       </CardShell>
 
-      <div id="calendar-import">
+      <div id="calendar-import" data-testid="ics-import-panel">
         <CardShell
           title={t('integrations.steps.schedule.title')}
           action={
@@ -563,6 +570,7 @@ export function IntegrationsSection() {
               type="file"
               accept=".ics,text/calendar"
               className="hidden"
+              data-testid="ics-import-file-input"
               onChange={(event) => void handleIcsUpload(event.target.files?.[0] ?? null)}
             />
           </label>
@@ -701,7 +709,7 @@ export function IntegrationsSection() {
         </CardShell>
       </div>
 
-      <div id="grades-import">
+      <div id="grades-import" data-testid="grades-import-panel">
         <CardShell
           title={t('integrations.steps.grades.title')}
           action={
@@ -762,6 +770,7 @@ export function IntegrationsSection() {
                   type="file"
                   accept=".csv,text/csv"
                   className="hidden"
+                  data-testid="grades-import-file-input"
                   onChange={(event) => void handleCsvUpload(event.target.files?.[0] ?? null)}
                 />
               </label>

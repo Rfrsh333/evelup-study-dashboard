@@ -12,6 +12,22 @@ export const en = {
     confirm: 'Confirm',
     back: 'Back',
     next: 'Next',
+    continue: 'Continue',
+    language: 'Language',
+    errors: {
+      generic: 'Something went wrong.',
+      network: 'Network issue. Try again.',
+      invalidFile: 'File cannot be read',
+      duplicateDetected: 'Duplicate detected. Skip.',
+      parseFailed: 'Parse error. Check format.',
+    },
+  },
+
+  tiers: {
+    elite: 'Elite',
+    highPerformer: 'High Performer',
+    onTrack: 'On Track',
+    needsImprovement: 'Needs Improvement',
   },
 
   // Momentum modes
@@ -183,139 +199,12 @@ export const en = {
     notificationsDisabled: 'Notifications off',
     focusWindow: 'Preferred focus window',
     focusMinutes: 'Focus duration (min)',
-  },
-
-  integrations: {
-    header: 'Integrations',
-    explainer: 'Brightspace syncs deadlines and grades. Calendar import adds upcoming deadlines.',
-    startHere: {
-      title: 'Connect your data in 2 minutes',
-      subtitle:
-        'Once your schedule and grades are in, LevelUp organizes your week and shows what you need to do to pass.',
-      progress: '{count}/2 connected',
-      stepSchedule: 'Import schedule (ICS)',
-      stepGrades: 'Import grades (PDF/CSV)',
+    notificationsUnsupported: 'Notifications are not supported in this browser.',
+    errors: {
+      missingVapid: 'Missing VAPID public key.',
+      subscriptionFailed: 'Failed to register push subscription.',
+      invalidSubscription: 'Invalid push subscription.',
     },
-    step: {
-      done: 'Completed',
-    },
-    steps: {
-      valueTitle: 'What do you get?',
-      schedule: {
-        title: 'Step 1 — Import schedule',
-        value: 'Your classes show up in Week. You get focus block suggestions around your schedule.',
-        ctaImport: 'Import schedule (ICS)',
-        ctaViewWeek: 'View Week',
-      },
-      grades: {
-        title: 'Step 2 — Import grades',
-        value: 'Block overview (Passed/Open) + predicted/required grade per course.',
-        tabPdf: 'PDF (recommended)',
-        tabCsv: 'CSV (alternative)',
-        ctaViewDashboard: 'View Dashboard',
-      },
-    },
-    faq: {
-      ics: {
-        title: 'How do I get an ICS?',
-        body: 'Export your schedule/agenda as .ics. If you can’t find it, ask your program for an ICS link.',
-      },
-      grades: {
-        title: 'How do I export grades?',
-        body: 'Download the Brightspace Progress Summary (PDF) or export a CSV of grades.',
-      },
-    },
-    brightspace: {
-      title: 'Brightspace',
-      description: 'Brightspace integration via school license.',
-      connect: 'Request your school to activate LevelUp',
-      note: 'OAuth runs server-side; your password stays with Brightspace.',
-    },
-    calendar: {
-      title: 'Calendar import',
-      description: 'Import deadlines from your calendar (.ics) into LevelUp.',
-      import: 'Import calendar',
-      refreshNote: 'Tip: add an ICS URL for quick refresh.',
-      imported: '{count} items imported',
-      previewTitle: 'We found {count} events',
-      confirm: 'Import',
-      cancel: 'Cancel',
-      errorNoVevent: 'No appointments found in this file. BEGIN:VEVENT is missing.',
-      errorEmpty: 'No appointments found in this file.',
-      errorParse: 'We found events but could not parse them.',
-      errorOutOfWindow:
-        'We found {count} events, but they’re outside the selected time window (all in the past or too far ahead).',
-      window: 'Window: {start} to {end}',
-      includeRecent: 'Include past 14 days',
-      debugTotals: 'Parsed: {parsed} · Kept: {kept} · Dropped: {dropped}',
-      debugToggle: 'Open debug details',
-      debugVevents: 'VEVENT count: {count}',
-      outOfWindow:
-        'We found {count} events, but they’re outside your current view (e.g. in the past). Check Week view or widen your time window.',
-      urlPlaceholder: 'Paste your ICS URL (optional)',
-      refresh: 'Refresh',
-      refreshing: 'Refreshing…',
-      refreshError: 'We could not fetch the ICS feed (CORS or network issue).',
-      refreshErrorTitle: 'Calendar URL blocked',
-      refreshSuccess: 'Calendar refreshed',
-      uploadCta: 'Upload .ics file',
-      needsManual: 'Manual upload needed. Keep the URL saved and upload a file when blocked.',
-    },
-    csv: {
-      title: 'Grades CSV',
-      description: 'Import your Brightspace grades with a CSV export.',
-      upload: 'Upload CSV',
-      import: 'Import grades',
-      preview: 'Preview import',
-      previewTitle: 'Preview',
-      previewStats: '{rows} rows · {courses} courses',
-      previewSummary: 'Example: {course} · predicted {predicted} · required {required}',
-      confirm: 'Confirm import',
-      back: 'Back',
-      rows: '{count} rows detected',
-      waiting: 'Waiting for CSV',
-      imported: '{count} grades imported',
-      pastePlaceholder: 'Paste CSV here…',
-      blockLabel: 'Block label',
-      parseError: 'Unable to read CSV. Please check the file format.',
-      mapping: {
-        course: 'Course column',
-        item: 'Item column',
-        score: 'Score column',
-        weight: 'Weight column',
-        date: 'Date column',
-        status: 'Status column',
-        block: 'Block column',
-        optional: 'Optional',
-      },
-    },
-    pdf: {
-      title: 'Progress Summary PDF',
-      description: 'Upload the Brightspace Progress Summary PDF to import competencies.',
-      upload: 'Upload PDF',
-      analyze: 'Analyze PDF',
-      analyzing: 'Analyzing…',
-      found: 'Found {total} items ({passed} passed, {pending} open)',
-      confirm: 'Confirm import',
-      back: 'Back',
-      remove: 'Remove',
-      blockLabel: 'Block label',
-      parseError: 'Unable to read the PDF. Try exporting again.',
-      empty: 'No items detected in this PDF.',
-      warning: 'Some items could not be parsed. Please review the list below.',
-      imported: '{count} items imported',
-    },
-    lti: {
-      title: 'School integration (LTI)',
-      description: 'For school licenses. Requires admin installation.',
-      comingSoon: 'Coming soon',
-    },
-    status: {
-      connected: 'Connected',
-      disconnected: 'Not connected',
-      localMode: 'Local mode',
-    },
-    ltiRequested: 'We will contact your school IT.',
   },
 
   insights: {
@@ -407,6 +296,16 @@ export const en = {
   },
 
   dashboard: {
+    performanceIndex: {
+      title: 'Performance Index',
+      percentile: 'Top {value}%',
+      rank: 'Position {value}',
+    },
+    trend: {
+      up: 'You’re climbing. Solid.',
+      down: 'You’re slipping. Fix it.',
+      steady: 'Stable. But you can push higher.',
+    },
     promise: {
       title: 'Elite Academic Performance Optimizer',
       subtitle: 'Track performance. Protect your average. Stay in top 10%.',
@@ -415,6 +314,18 @@ export const en = {
       title: 'Performance',
       subtitle: 'Index, rankings, and targets',
     },
+    eliteHeader: {
+      title: 'Performance Index',
+      labelPercentile: 'Top {value}%',
+      labelRank: '#{value}',
+      labelTargetAverage: 'Target avg',
+      labelScoreGap: 'Gap',
+      trend: {
+        up: '↑',
+        down: '↓',
+        steady: '→',
+      },
+    },
     onboarding: {
       step: 'Step {step}',
       step1: 'Import schedule (ICS)',
@@ -422,13 +333,13 @@ export const en = {
       step3: 'Schedule first session',
     },
     startHere: {
-      title: 'Setup required',
-      subtitle: 'Connect data to calculate Performance Index.',
-      compact: 'Import schedule and grades for full performance tracking.',
+      title: 'Start here',
+      subtitle: 'In 2 minutes you’ll know what to do today to pass.',
+      compact: 'Check your week or import more data to plan faster.',
       bullets: {
-        importCalendar: 'Import schedule → weekly planning',
-        importGrades: 'Import grades → performance tracking',
-        makeFocusBlocks: 'Execute sessions → maintain index',
+        importCalendar: 'Import your schedule → see your week',
+        importGrades: 'Import your grades → see what you need to score',
+        makeFocusBlocks: 'Create focus blocks to get it done',
       },
       cta: {
         importCalendar: 'Import schedule',
@@ -438,6 +349,74 @@ export const en = {
     },
   },
 
+  // Performance tiers & messages (Elite tone)
+  performance: {
+    tiers: {
+      elite: 'Elite',
+      highPerformer: 'High Performer',
+      onTrack: 'On Track',
+      needsImprovement: 'Needs Focus',
+    },
+    message: {
+      win: 'Clean. That’s top-tier behavior.',
+      steady: 'You’re in the game. Not winning yet.',
+      drop: 'Not your week. No excuses. One block + one focused session. Reset.',
+      hardDrop: 'This is sliding. Keep this up and your tier drops.',
+      nearMiss: 'You’re {delta} away from Elite. One strong week and you’re in.',
+      momentumRisk: 'Momentum is fading. Another week like this and you drop.',
+      eliteConsistency: 'Staying Elite is harder than reaching it. Hold it.',
+    },
+    messages: {
+      // Win scenario
+      win: 'Solid. Keep it steady.',
+      winElite: 'Top {percentile}% this week. Stay sharp.',
+
+      // Steady
+      steady: 'Stable. But you can go higher.',
+      steadyPush: "Index at {index}. One strong week and you're Elite.",
+
+      // Drop
+      drop: 'Not your week. Reset: 1 block + 1 focused session.',
+      dropHard: 'Index dropping. Two more days like this and your grade collapses. Act now.',
+
+      // Near miss
+      nearMiss: "{delta} points from Elite. One strong week and you're in.",
+
+      // Momentum at risk
+      momentumRisk: 'Momentum dropping. Two more days and your index collapses.',
+
+      // Streak broken
+      streakBroken: 'Streak broken. Fresh start: get 1 session today.',
+
+      // Consistency rising
+      consistencyRising: 'Consistency rising faster than last week. Clean.',
+    },
+  },
+
+  // Block progress
+  blocks: {
+    status: {
+      passed: 'Passed',
+      failed: 'Failed',
+      pending: 'Open',
+    },
+  },
+
+  // Groups
+  groups: {
+    position: '#{position}',
+    percentileInGroup: 'Top {value}% in group',
+    movedUp: '↑ {positions} up',
+    movedDown: '↓ {positions} down',
+    noChange: '→ No change',
+    positionLabel: 'Position {value}',
+    percentile: 'Top {value}% in your group',
+    movedUpLabel: '+{value} positions',
+    movedDownLabel: '-{value} positions',
+    noChangeLabel: 'No movement',
+    pressureMessage: 'Everyone sees movement. So do you.',
+  },
+
   system: {
     dbLocalMode: {
       title: 'Database not configured. Local mode active.',
@@ -445,14 +424,57 @@ export const en = {
     },
   },
 
-  // Elite tier
+  // Integrations Brightspace
+  integrations: {
+    import: {
+      csv: 'Import grades (CSV)',
+      pdf: 'Import progress (PDF)',
+      ics: 'Import deadlines (ICS)',
+      success: 'Data synced. Time to perform.',
+      failed: 'File invalid. Check it.',
+    },
+    brightspace: {
+      title: 'Brightspace',
+      importCsv: 'Import CSV',
+      importPdf: 'Import PDF',
+      importIcs: 'Import ICS',
+      status: {
+        importing: 'Importing...',
+        success: 'Success',
+        failed: 'Failed',
+      },
+      errors: {
+        invalidFile: 'Invalid file',
+        duplicateDetected: 'Duplicate detected',
+        parseFailed: 'Parse error',
+      },
+    },
+  },
+
+  paywall: {
+    elite: {
+      title: 'Elite Mode',
+      subtitle: 'For students who want to compete seriously.',
+      cta: 'Unlock Elite',
+      pressure: 'Others see more data than you do.',
+      benefits: {
+        history: '90-day performance history',
+        groups: 'Groups & leaderboards',
+        breakdown: 'Full index breakdown',
+        reports: 'Monthly performance report',
+      },
+    },
+  },
+
+  // Elite tier paywall
   elite: {
     badge: 'Elite',
     freeBadge: 'Free',
     upgradeCta: 'Upgrade to Elite',
     upgradeTitle: 'Unlock Elite Performance',
     upgradeSubtitle: '€2.50/month · Cancel anytime',
-    features: {
+    benefits: {
+      title: 'What you get',
       historyDays: '90-day performance history',
       groups: 'Private study groups (max 5)',
       breakdown: 'Detailed index breakdown',
@@ -482,5 +504,6 @@ export const en = {
       weekOnly: 'Week-over-week',
       fullTrends: '90-day trends',
     },
+    upsell: 'Your index is stagnating. Elite users see breakdowns + can join groups. €2.50/month.',
   },
 } as const

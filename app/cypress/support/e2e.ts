@@ -6,8 +6,7 @@ import './commands'
 declare global {
   namespace Cypress {
     interface Chainable {
-      // Add custom command types here if needed
-      // Example: login(email: string, password: string): Chainable<void>
+      getByTestId(id: string): Chainable<JQuery<HTMLElement>>
     }
   }
 }

@@ -15,6 +15,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { PerformanceIndex, PerformanceTrend } from '@/domain/types'
 import { getPerformanceTier, getPerformanceMessage } from '@/domain/performance-index'
+import { LanguageToggle } from '@/components/common/LanguageToggle'
+import { useTranslation } from '@/i18n'
 
 interface EliteHeaderProps {
   performanceIndex: PerformanceIndex
@@ -23,18 +25,24 @@ interface EliteHeaderProps {
 }
 
 export function EliteHeader({ performanceIndex, percentile, className }: EliteHeaderProps) {
+  const { t } = useTranslation()
   const { index, trend, targetAverage, scoreGap } = performanceIndex
   const tier = getPerformanceTier(index)
   const message = getPerformanceMessage(index, trend, percentile)
 
   return (
     <Card className={cn('overflow-hidden border-2', getTierBorderColor(tier), className)}>
-      <CardContent className="p-8">
+      <CardContent className="relative p-8">
+        {/* Language Toggle - Top Right */}
+        <div className="absolute right-4 top-4">
+          <LanguageToggle />
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left: Performance Index */}
           <div className="flex flex-col items-center justify-center lg:items-start">
             <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Performance Index
+              {t('dashboard.performanceIndex.title')}
             </div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className={cn('text-6xl font-bold tabular-nums', getTierTextColor(tier))}>
@@ -50,10 +58,10 @@ export function EliteHeader({ performanceIndex, percentile, className }: EliteHe
             {percentile !== undefined && percentile >= 50 && (
               <>
                 <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                  Ranking
+                  {t('dashboard.performanceIndex.percentile', { value: (100 - percentile).toString() })}
                 </div>
                 <div className="mt-2 text-4xl font-bold text-foreground">
-                  Top {100 - percentile}%
+                  {t('dashboard.performanceIndex.percentile', { value: (100 - percentile).toString() })}
                 </div>
               </>
             )}
@@ -63,19 +71,19 @@ export function EliteHeader({ performanceIndex, percentile, className }: EliteHe
                 getTierBadgeStyle(tier)
               )}
             >
-              {getTierLabel(tier)}
+              {getTierLabel(tier, t)}
             </div>
           </div>
 
           {/* Right: Target & Gap */}
           <div className="flex flex-col items-center justify-center lg:items-end">
             <div className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-              Target Average
+              {t('dashboard.eliteHeader.labelTargetAverage')}
             </div>
             <div className="mt-2 text-4xl font-bold text-foreground">{targetAverage}</div>
             {scoreGap !== 0 && (
               <div className="mt-3 text-sm">
-                <span className="text-muted-foreground">Gap: </span>
+                <span className="text-muted-foreground">{t('dashboard.eliteHeader.labelScoreGap')}: </span>
                 <span
                   className={cn(
                     'font-semibold',
@@ -93,7 +101,9 @@ export function EliteHeader({ performanceIndex, percentile, className }: EliteHe
         {/* Performance Message */}
         <div className="mt-8 flex items-start gap-3 rounded-lg bg-muted/50 p-4">
           <TrendingUp className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
-          <p className="text-sm font-medium leading-relaxed text-foreground">{message}</p>
+          <p className="text-sm font-medium leading-relaxed text-foreground">
+            {t(message.key, message.params)}
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -101,6 +111,7 @@ export function EliteHeader({ performanceIndex, percentile, className }: EliteHe
 }
 
 function TrendIndicator({ trend, className }: { trend: PerformanceTrend; className?: string }) {
+  const { t } = useTranslation()
   const Icon =
     trend.direction === 'up' ? ArrowUp : trend.direction === 'down' ? ArrowDown : ArrowRight
 
@@ -119,7 +130,7 @@ function TrendIndicator({ trend, className }: { trend: PerformanceTrend; classNa
           {trend.deltaIndex > 0 ? '+' : ''}
           {trend.deltaIndex.toFixed(1)}
         </span>
-        <span className="ml-1.5 text-muted-foreground">{trend.weekComparison}</span>
+        <span className="ml-1.5 text-muted-foreground">{t(`dashboard.trend.${trend.direction}`)}</span>
       </div>
     </div>
   )
@@ -164,15 +175,18 @@ function getTierBadgeStyle(tier: ReturnType<typeof getPerformanceTier>): string 
   }
 }
 
-function getTierLabel(tier: ReturnType<typeof getPerformanceTier>): string {
+function getTierLabel(
+  tier: ReturnType<typeof getPerformanceTier>,
+  t: (key: string) => string
+): string {
   switch (tier) {
     case 'elite':
-      return 'Elite'
+      return t('tiers.elite')
     case 'high-performer':
-      return 'High Performer'
+      return t('tiers.highPerformer')
     case 'on-track':
-      return 'On Track'
+      return t('tiers.onTrack')
     case 'needs-improvement':
-      return 'Needs Focus'
+      return t('tiers.needsImprovement')
   }
 }

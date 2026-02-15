@@ -1,20 +1,22 @@
 describe('Dashboard - Start Here Flow', () => {
   beforeEach(() => {
-    cy.visit('/')
-    // Clear local storage to start fresh
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should show StartHereCard when no data is imported', () => {
-    // Check that StartHereCard is visible
-    cy.contains('Start hier').should('be.visible')
-    cy.contains('Importeer rooster').should('be.visible')
-    cy.contains('Importeer cijfers').should('be.visible')
-    cy.contains('Bekijk week').should('be.visible')
+    cy.getByTestId('start-here-card').should('be.visible')
+    cy.getByTestId('start-here-import-calendar').should('be.visible')
+    cy.getByTestId('start-here-import-grades').should('be.visible')
+    cy.getByTestId('start-here-view-week').should('be.visible')
   })
 
   it('should navigate to settings when Import Rooster is clicked', () => {
-    cy.contains('button', 'Importeer rooster').click()
+    cy.getByTestId('start-here-import-calendar').click()
 
     // Should navigate to settings with calendar focus
     // Note: This depends on your routing implementation
@@ -22,14 +24,14 @@ describe('Dashboard - Start Here Flow', () => {
   })
 
   it('should navigate to settings when Import Cijfers is clicked', () => {
-    cy.contains('button', 'Importeer cijfers').click()
+    cy.getByTestId('start-here-import-grades').click()
 
     // Should navigate to settings with grades focus
     cy.url().should('include', '#grades')
   })
 
   it('should navigate to week view when Bekijk week is clicked', () => {
-    cy.contains('button', 'Bekijk week').click()
+    cy.getByTestId('start-here-view-week').click()
 
     // Should navigate to week view
     // This depends on how your app handles navigation
@@ -38,7 +40,12 @@ describe('Dashboard - Start Here Flow', () => {
 
 describe('Dashboard - Today Hero with Data', () => {
   beforeEach(() => {
-    cy.visit('/')
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should show compact StartHereCard when data exists', () => {
@@ -56,34 +63,31 @@ describe('Dashboard - Today Hero with Data', () => {
 
 describe('Dashboard - i18n Language Switching', () => {
   beforeEach(() => {
-    cy.visit('/')
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should default to Dutch', () => {
-    cy.contains('Start hier').should('be.visible')
-    cy.contains('Importeer rooster').should('be.visible')
+    cy.getByTestId('start-here-card').should('be.visible')
   })
 
   it('should switch to English when language toggle is clicked', () => {
-    // Find and click language toggle (you may need to adjust selector)
-    // This depends on where your language switcher is located
-    // For now, we'll just verify that the mechanism exists
-
-    // Check for language switcher in the UI
-    // cy.get('[data-testid="language-toggle"]').click()
-    // cy.contains('Start here').should('be.visible')
-    // cy.contains('Import schedule').should('be.visible')
+    cy.getByTestId('lang-en').click()
+    cy.getByTestId('start-here-card').should('be.visible')
+    cy.getByTestId('lang-en').should('have.attr', 'aria-pressed', 'true')
+    cy.getByTestId('lang-nl').should('have.attr', 'aria-pressed', 'false')
   })
 
   it('should persist language choice in localStorage', () => {
-    // Switch to English
-    // cy.get('[data-testid="language-toggle"]').click()
+    cy.getByTestId('lang-en').click()
 
     // Reload page
     cy.reload()
 
-    // Should still be in English
-    // cy.contains('Start here').should('be.visible')
+    cy.getByTestId('start-here-card').should('be.visible')
   })
 })

@@ -12,6 +12,22 @@ export const nl = {
     confirm: 'Bevestigen',
     back: 'Terug',
     next: 'Volgende',
+    continue: 'Doorgaan',
+    language: 'Taal',
+    errors: {
+      generic: 'Er ging iets mis.',
+      network: 'Netwerk issue. Probeer opnieuw.',
+      invalidFile: 'Bestand kan niet gelezen worden',
+      duplicateDetected: 'Duplicate gevonden. Skip.',
+      parseFailed: 'Parse error. Check formaat.',
+    },
+  },
+
+  tiers: {
+    elite: 'Elite',
+    highPerformer: 'High Performer',
+    onTrack: 'On Track',
+    needsImprovement: 'Needs Improvement',
   },
 
   // Momentum modes
@@ -183,139 +199,12 @@ export const nl = {
     notificationsDisabled: 'Notificaties uit',
     focusWindow: 'Voorkeursfocusblok',
     focusMinutes: 'Focusduur (min)',
-  },
-
-  integrations: {
-    header: 'Koppelingen',
-    explainer: 'Brightspace synchroniseert deadlines en cijfers. Agenda-import voegt deadlines toe.',
-    startHere: {
-      title: 'Koppel je data in 2 minuten',
-      subtitle:
-        'Zodra je rooster en cijfers binnen zijn, maakt LevelUp je week overzichtelijk en laat het zien wat je moet doen om te slagen.',
-      progress: '{count}/2 gekoppeld',
-      stepSchedule: 'Rooster importeren (ICS)',
-      stepGrades: 'Cijfers importeren (PDF/CSV)',
+    notificationsUnsupported: 'Notificaties worden niet ondersteund in deze browser.',
+    errors: {
+      missingVapid: 'VAPID public key ontbreekt.',
+      subscriptionFailed: 'Push abonnement kon niet worden geregistreerd.',
+      invalidSubscription: 'Ongeldig push abonnement.',
     },
-    step: {
-      done: 'Voltooid',
-    },
-    steps: {
-      valueTitle: 'Wat krijg je?',
-      schedule: {
-        title: 'Stap 1 — Rooster importeren',
-        value: 'Je lessen/afspraken komen in Week. Je krijgt focusblok-voorstellen rond je rooster.',
-        ctaImport: 'Importeer rooster (ICS)',
-        ctaViewWeek: 'Bekijk Week',
-      },
-      grades: {
-        title: 'Stap 2 — Cijfers importeren',
-        value: 'Blokoverzicht (Voldaan/Open) + voorspelling/benodigd cijfer per vak.',
-        tabPdf: 'PDF (aanrader)',
-        tabCsv: 'CSV (alternatief)',
-        ctaViewDashboard: 'Bekijk Dashboard',
-      },
-    },
-    faq: {
-      ics: {
-        title: 'Hoe kom ik aan een ICS?',
-        body: 'Ga naar je rooster/agenda en exporteer als .ics. Lukt het niet? Vraag je opleiding naar een ICS-link.',
-      },
-      grades: {
-        title: 'Hoe exporteer ik cijfers?',
-        body: 'Download in Brightspace de Progress Summary (PDF) of exporteer een CSV met cijfers.',
-      },
-    },
-    brightspace: {
-      title: 'Brightspace',
-      description: 'Brightspace koppeling via schoollicentie.',
-      connect: 'Vraag jouw opleiding om LevelUp te activeren',
-      note: 'OAuth loopt via de server; je wachtwoord blijft bij Brightspace.',
-    },
-    calendar: {
-      title: 'Agenda import',
-      description: 'Importeer deadlines uit je agenda (.ics) in LevelUp.',
-      import: 'Importeer agenda',
-      refreshNote: 'Tip: voeg een ICS-URL toe om snel te refreshen.',
-      imported: '{count} items geïmporteerd',
-      previewTitle: 'We vonden {count} afspraken',
-      confirm: 'Importeren',
-      cancel: 'Annuleren',
-      errorNoVevent: 'Geen afspraken gevonden in dit bestand. BEGIN:VEVENT ontbreekt.',
-      errorEmpty: 'Geen afspraken gevonden in dit bestand.',
-      errorParse: 'We vonden afspraken maar konden ze niet parsen.',
-      errorOutOfWindow:
-        'We vonden {count} afspraken, maar ze vallen buiten je ingestelde periode (alles is al voorbij of te ver in de toekomst).',
-      window: 'Periode: {start} tot {end}',
-      includeRecent: 'Afgelopen 14 dagen meenemen',
-      debugTotals: 'Parsed: {parsed} · Behouden: {kept} · Weggegooid: {dropped}',
-      debugToggle: 'Open debugdetails',
-      debugVevents: 'VEVENT aantal: {count}',
-      outOfWindow:
-        'We hebben {count} afspraken gevonden, maar ze vallen buiten je huidige weergave (bijv. in het verleden). Bekijk Weekoverzicht of vergroot je tijdvenster.',
-      urlPlaceholder: 'Plak je ICS-URL (optioneel)',
-      refresh: 'Vernieuwen',
-      refreshing: 'Bezig…',
-      refreshError: 'ICS-feed kon niet worden opgehaald (CORS of netwerkfout).',
-      refreshErrorTitle: 'Agenda-URL geblokkeerd',
-      refreshSuccess: 'Agenda vernieuwd',
-      uploadCta: 'Upload .ics bestand',
-      needsManual: 'Handmatige upload nodig. Laat de URL staan en upload een bestand.',
-    },
-    csv: {
-      title: 'Cijfers CSV',
-      description: 'Importeer je Brightspace-cijfers via een CSV-export.',
-      upload: 'Upload CSV',
-      import: 'Importeer cijfers',
-      preview: 'Preview import',
-      previewTitle: 'Voorbeeld',
-      previewStats: '{rows} rijen · {courses} vakken',
-      previewSummary: 'Voorbeeld: {course} · verwacht {predicted} · nodig {required}',
-      confirm: 'Import bevestigen',
-      back: 'Terug',
-      rows: '{count} rijen gevonden',
-      waiting: 'Wachten op CSV',
-      imported: '{count} cijfers geïmporteerd',
-      pastePlaceholder: 'Plak CSV hier…',
-      blockLabel: 'Blok label',
-      parseError: 'CSV kon niet worden gelezen. Controleer het formaat.',
-      mapping: {
-        course: 'Vak-kolom',
-        item: 'Item-kolom',
-        score: 'Cijfer-kolom',
-        weight: 'Weging-kolom',
-        date: 'Datum-kolom',
-        status: 'Status-kolom',
-        block: 'Blok-kolom',
-        optional: 'Optioneel',
-      },
-    },
-    pdf: {
-      title: 'Progress Summary PDF',
-      description: 'Upload de Brightspace Progress Summary PDF om competenties te importeren.',
-      upload: 'Upload PDF',
-      analyze: 'Analyseer PDF',
-      analyzing: 'Bezig…',
-      found: '{total} onderdelen gevonden ({passed} voldaan, {pending} open)',
-      confirm: 'Import bevestigen',
-      back: 'Terug',
-      remove: 'Verwijderen',
-      blockLabel: 'Blok label',
-      parseError: 'PDF kon niet worden gelezen. Exporteer opnieuw.',
-      empty: 'Geen onderdelen gevonden in deze PDF.',
-      warning: 'Sommige onderdelen konden niet worden herkend. Controleer de lijst hieronder.',
-      imported: '{count} onderdelen geïmporteerd',
-    },
-    lti: {
-      title: 'Schoolkoppeling (LTI)',
-      description: 'Voor schoollicenties. Vereist installatie door je instelling.',
-      comingSoon: 'Binnenkort beschikbaar',
-    },
-    status: {
-      connected: 'Verbonden',
-      disconnected: 'Niet verbonden',
-      localMode: 'Lokale modus',
-    },
-    ltiRequested: 'We nemen contact op met jouw opleiding.',
   },
 
   insights: {
@@ -406,7 +295,25 @@ export const nl = {
     },
   },
 
+  system: {
+    dbLocalMode: {
+      title: 'Database nog niet ingesteld. Lokale modus actief.',
+      subtitle: 'Run supabase-schema.sql in Supabase → SQL Editor.',
+    },
+  },
+
+  // Dashboard Elite Header
   dashboard: {
+    performanceIndex: {
+      title: 'Performance Index',
+      percentile: 'Top {value}%',
+      rank: 'Positie {value}',
+    },
+    trend: {
+      up: 'Je stijgt. Goed bezig.',
+      down: 'Je zakt. Tijd om te reageren.',
+      steady: 'Stabiel. Maar er zit meer in.',
+    },
     promise: {
       title: 'Elite Academic Performance Optimizer',
       subtitle: 'Track performance. Protect your average. Stay in top 10%.',
@@ -415,6 +322,18 @@ export const nl = {
       title: 'Performance',
       subtitle: 'Index, rankings, and targets',
     },
+    eliteHeader: {
+      title: 'Performance Index',
+      labelPercentile: 'Top {value}%',
+      labelRank: '#{value}',
+      labelTargetAverage: 'Target avg',
+      labelScoreGap: 'Gap',
+      trend: {
+        up: '↑',
+        down: '↓',
+        steady: '→',
+      },
+    },
     onboarding: {
       step: 'Step {step}',
       step1: 'Import schedule (ICS)',
@@ -422,41 +341,270 @@ export const nl = {
       step3: 'Schedule first session',
     },
     startHere: {
-      title: 'Setup required',
-      subtitle: 'Connect data to calculate Performance Index.',
-      compact: 'Import schedule and grades for full performance tracking.',
+      title: 'Start hier',
+      subtitle: 'In 2 minuten weet je wat je vandaag moet doen om te slagen.',
+      compact: 'Bekijk je week of importeer extra data om sneller te plannen.',
       bullets: {
-        importCalendar: 'Import schedule → weekly planning',
-        importGrades: 'Import grades → performance tracking',
-        makeFocusBlocks: 'Execute sessions → maintain index',
+        importCalendar: 'Importeer je rooster → zie je week',
+        importGrades: 'Importeer je cijfers → zie wat je moet halen',
+        makeFocusBlocks: 'Maak focusblokken om het af te maken',
       },
       cta: {
-        importCalendar: 'Import schedule',
-        importGrades: 'Import grades',
-        viewWeek: 'View week',
+        importCalendar: 'Importeer rooster',
+        importGrades: 'Importeer cijfers',
+        viewWeek: 'Bekijk week',
       },
     },
   },
 
-  system: {
-    dbLocalMode: {
-      title: 'Database nog niet ingesteld. Lokale modus actief.',
-      subtitle: 'Run supabase-schema.sql in Supabase → SQL Editor.',
+  // Performance tiers & messages (Elite Gen Z tone)
+  performance: {
+    tiers: {
+      elite: 'Elite',
+      highPerformer: 'High Performer',
+      onTrack: 'On Track',
+      needsImprovement: 'Needs Focus',
+    },
+    message: {
+      win: 'Strak. Dit is top 10%-gedrag.',
+      steady: 'Je draait mee. Maar je speelt nog niet om te winnen.',
+      drop:
+        'Oké… dit was niet jouw week. Geen drama. Pak 1 blok + 1 focus-sessie en draai ’m om.',
+      hardDrop: 'Dit glijdt weg. Als je dit laat liggen, zakt je tier. Tijd om wakker te worden.',
+      nearMiss: 'Je zit {delta} van Elite. Eén sterke week en je bent binnen.',
+      momentumRisk: 'Momentum zakt. Nog even zo en je index krijgt klappen.',
+      eliteConsistency: 'Elite blijven is moeilijker dan Elite worden. Hou dit vast.',
+    },
+    messages: {
+      // Win scenario: index 85+, percentile 90+
+      win: 'Je zit strak. Hou dit vast.',
+      winElite: 'Top {percentile}% deze week. Blijf scherp.',
+
+      // Steady: 70-84, stable trend
+      steady: 'Stabiel. Maar je kan hoger.',
+      steadyPush: 'Je zit op {index}. Eén sterke week en je bent Elite.',
+
+      // Drop: index < 70 or negative trend
+      drop: 'Oké… dit was niet jouw week. Fix \'m: pak 1 blok + 1 focus-sessie.',
+      dropHard: 'Index zakt. Nog 2 dagen zo en je cijfer klapt. Actie: nu.',
+
+      // Near miss: 1-5 points from tier upgrade
+      nearMiss: 'Je zit op {delta} van Elite. Eén sterke week en je bent binnen.',
+
+      // Momentum at risk
+      momentumRisk: 'Momentum zakt. Nog 2 dagen zo en je index klapt omlaag.',
+
+      // Streak broken
+      streakBroken: 'Streak kapot. Fresh start: pak vandaag 1 sessie.',
+
+      // Consistency rising
+      consistencyRising: 'Consistency stijgt sneller dan vorige week. Clean.',
     },
   },
 
-  // Elite tier
+  // Block progress
+  blocks: {
+    status: {
+      passed: 'Behaald',
+      failed: 'Niet voldaan',
+      pending: 'Open',
+    },
+  },
+
+  // Groups (ranking & percentile)
+  groups: {
+    position: '#{position}',
+    percentileInGroup: 'Top {value}% in groep',
+    movedUp: '↑ {positions} omhoog',
+    movedDown: '↓ {positions} omlaag',
+    noChange: '→ Gelijk gebleven',
+    positionLabel: 'Positie {value}',
+    percentile: 'Top {value}% in je groep',
+    movedUpLabel: '+{value} plekken',
+    movedDownLabel: '-{value} plekken',
+    noChangeLabel: 'Geen beweging',
+    pressureMessage: 'Iedereen ziet beweging. Jij ook.',
+  },
+
+  // Integrations Brightspace
+  integrations: {
+    header: 'Koppelingen',
+    explainer: 'Brightspace synchroniseert deadlines en cijfers. Agenda-import voegt deadlines toe.',
+    startHere: {
+      title: 'Koppel je data in 2 minuten',
+      subtitle:
+        'Zodra je rooster en cijfers binnen zijn, maakt LevelUp je week overzichtelijk en laat het zien wat je moet doen om te slagen.',
+      progress: '{count}/2 gekoppeld',
+      stepSchedule: 'Rooster importeren (ICS)',
+      stepGrades: 'Cijfers importeren (PDF/CSV)',
+    },
+    step: {
+      done: 'Voltooid',
+    },
+    steps: {
+      valueTitle: 'Wat krijg je?',
+      schedule: {
+        title: 'Stap 1 — Rooster importeren',
+        value: 'Je lessen/afspraken komen in Week. Je krijgt focusblok-voorstellen rond je rooster.',
+        ctaImport: 'Importeer rooster (ICS)',
+        ctaViewWeek: 'Bekijk Week',
+      },
+      grades: {
+        title: 'Stap 2 — Cijfers importeren',
+        value: 'Blokoverzicht (Voldaan/Open) + voorspelling/benodigd cijfer per vak.',
+        tabPdf: 'PDF (aanrader)',
+        tabCsv: 'CSV (alternatief)',
+        ctaViewDashboard: 'Bekijk Dashboard',
+      },
+    },
+    brightspace: {
+      title: 'Brightspace',
+      importCsv: 'Importeer CSV',
+      importPdf: 'Importeer PDF',
+      importIcs: 'Importeer ICS',
+      status: {
+        importing: 'Importeren...',
+        success: 'Gelukt',
+        failed: 'Mislukt',
+      },
+      errors: {
+        invalidFile: 'Bestand niet geldig',
+        duplicateDetected: 'Duplicaat gedetecteerd',
+        parseFailed: 'Parse error',
+      },
+    },
+    faq: {
+      ics: {
+        title: 'Hoe kom ik aan een ICS?',
+        body: 'Ga naar je rooster/agenda en exporteer als .ics. Lukt het niet? Vraag je opleiding naar een ICS-link.',
+      },
+      grades: {
+        title: 'Hoe exporteer ik cijfers?',
+        body: 'Download in Brightspace de Progress Summary (PDF) of exporteer een CSV met cijfers.',
+      },
+    },
+    calendar: {
+      title: 'Agenda import',
+      description: 'Importeer deadlines uit je agenda (.ics) in LevelUp.',
+      import: 'Importeer agenda',
+      refreshNote: 'Tip: voeg een ICS-URL toe om snel te refreshen.',
+      imported: '{count} items geïmporteerd',
+      previewTitle: 'We vonden {count} afspraken',
+      confirm: 'Importeren',
+      cancel: 'Annuleren',
+      errorNoVevent: 'Geen afspraken gevonden in dit bestand. BEGIN:VEVENT ontbreekt.',
+      errorEmpty: 'Geen afspraken gevonden in dit bestand.',
+      errorParse: 'We vonden afspraken maar konden ze niet parsen.',
+      errorOutOfWindow:
+        'We vonden {count} afspraken, maar ze vallen buiten je ingestelde periode (alles is al voorbij of te ver in de toekomst).',
+      window: 'Periode: {start} tot {end}',
+      includeRecent: 'Afgelopen 14 dagen meenemen',
+      debugTotals: 'Parsed: {parsed} · Behouden: {kept} · Weggegooid: {dropped}',
+      debugToggle: 'Open debugdetails',
+      debugVevents: 'VEVENT aantal: {count}',
+      outOfWindow:
+        'We hebben {count} afspraken gevonden, maar ze vallen buiten je huidige weergave (bijv. in het verleden). Bekijk Weekoverzicht of vergroot je tijdvenster.',
+      urlPlaceholder: 'Plak je ICS-URL (optioneel)',
+      refresh: 'Vernieuwen',
+      refreshing: 'Bezig…',
+      refreshError: 'ICS-feed kon niet worden opgehaald (CORS of netwerkfout).',
+      refreshErrorTitle: 'Agenda-URL geblokkeerd',
+      refreshSuccess: 'Agenda vernieuwd',
+      uploadCta: 'Upload .ics bestand',
+      needsManual: 'Handmatige upload nodig. Laat de URL staan en upload een bestand.',
+    },
+    csv: {
+      title: 'Cijfers CSV',
+      description: 'Importeer je Brightspace-cijfers via een CSV-export.',
+      upload: 'Upload CSV',
+      import: 'Importeer cijfers',
+      preview: 'Preview import',
+      previewTitle: 'Voorbeeld',
+      previewStats: '{rows} rijen · {courses} vakken',
+      previewSummary: 'Voorbeeld: {course} · verwacht {predicted} · nodig {required}',
+      confirm: 'Import bevestigen',
+      back: 'Terug',
+      rows: '{count} rijen gevonden',
+      waiting: 'Wachten op CSV',
+      imported: '{count} cijfers geïmporteerd',
+      pastePlaceholder: 'Plak CSV hier…',
+      blockLabel: 'Blok label',
+      parseError: 'CSV kon niet worden gelezen. Controleer het formaat.',
+      mapping: {
+        course: 'Vak-kolom',
+        item: 'Item-kolom',
+        score: 'Cijfer-kolom',
+        weight: 'Weging-kolom',
+        date: 'Datum-kolom',
+        status: 'Status-kolom',
+        block: 'Blok-kolom',
+        optional: 'Optioneel',
+      },
+    },
+    pdf: {
+      title: 'Progress Summary PDF',
+      description: 'Upload de Brightspace Progress Summary PDF om competenties te importeren.',
+      upload: 'Upload PDF',
+      analyze: 'Analyseer PDF',
+      analyzing: 'Bezig…',
+      found: '{total} onderdelen gevonden ({passed} voldaan, {pending} open)',
+      confirm: 'Import bevestigen',
+      back: 'Terug',
+      remove: 'Verwijderen',
+      blockLabel: 'Blok label',
+      parseError: 'PDF kon niet worden gelezen. Exporteer opnieuw.',
+      empty: 'Geen onderdelen gevonden in deze PDF.',
+      warning: 'Sommige onderdelen konden niet worden herkend. Controleer de lijst hieronder.',
+      imported: '{count} onderdelen geïmporteerd',
+    },
+    lti: {
+      title: 'Schoolkoppeling (LTI)',
+      description: 'Voor schoollicenties. Vereist installatie door je instelling.',
+      comingSoon: 'Binnenkort beschikbaar',
+    },
+    status: {
+      connected: 'Verbonden',
+      disconnected: 'Niet verbonden',
+      localMode: 'Lokale modus',
+    },
+    ltiRequested: 'We nemen contact op met jouw opleiding.',
+    import: {
+      csv: 'Importeer cijfers (CSV)',
+      pdf: 'Importeer voortgang (PDF)',
+      ics: 'Importeer deadlines (ICS)',
+      success: 'Data binnen. Nu presteren.',
+      failed: 'Dit bestand klopt niet. Check ’m even.',
+    },
+  },
+
+  paywall: {
+    elite: {
+      title: 'Elite Mode',
+      subtitle: 'Voor studenten die serieus willen winnen.',
+      cta: 'Unlock Elite',
+      pressure: 'Je concurrenten zien meer data dan jij.',
+      benefits: {
+        history: '90 dagen performance historie',
+        groups: 'Groepen & ranglijsten',
+        breakdown: 'Volledige breakdown van je index',
+        reports: 'Maandelijkse performance report',
+      },
+    },
+  },
+
+  // Elite tier paywall
   elite: {
     badge: 'Elite',
     freeBadge: 'Free',
-    upgradeCta: 'Upgrade to Elite',
+    upgradeCta: 'Upgrade naar Elite',
     upgradeTitle: 'Unlock Elite Performance',
-    upgradeSubtitle: '€2.50/month · Cancel anytime',
-    features: {
-      historyDays: '90-day performance history',
+    upgradeSubtitle: '€2.50/maand · Cancel wanneer je wilt',
+    benefits: {
+      title: 'Wat krijg je?',
+      historyDays: '90 dagen performance history',
       groups: 'Private study groups (max 5)',
       breakdown: 'Detailed index breakdown',
-      reports: 'Monthly performance reports',
+      reports: 'Maandelijkse performance reports',
     },
     locked: {
       groups: 'Performance groups — Elite only',
@@ -475,13 +623,14 @@ export const nl = {
       featureTrends: 'Trends',
       basicIndex: 'Basic (0-100)',
       fullBreakdown: 'Full breakdown',
-      sevenDays: '7 days',
-      ninetyDays: '90 days',
-      noGroups: 'Not available',
-      upToFive: 'Up to 5',
+      sevenDays: '7 dagen',
+      ninetyDays: '90 dagen',
+      noGroups: 'Niet beschikbaar',
+      upToFive: 'Tot 5',
       weekOnly: 'Week-over-week',
       fullTrends: '90-day trends',
     },
+    upsell: 'Je index stagneert. Elite users zien breakdowns + kunnen groepen joinen. €2.50/maand.',
   },
 } as const
 

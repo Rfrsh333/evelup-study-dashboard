@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useMemo, useState, lazy } from 'react'
 import { CardShell } from '@/components/common/CardShell'
+import { LanguageToggle } from '@/components/common/LanguageToggle'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
 import { useAppState } from '@/app/AppStateProvider'
@@ -50,7 +51,7 @@ export function SettingsPage() {
 
   const handleToggle = async () => {
     if (!canEnable) {
-      setError('Notifications not supported in this browser.')
+      setError(t('settings.notificationsUnsupported'))
       return
     }
 
@@ -67,21 +68,21 @@ export function SettingsPage() {
         }
 
         if (!VAPID_PUBLIC_KEY) {
-          setError('Missing VAPID public key')
+          setError(t('settings.errors.missingVapid'))
           setStatus('error')
           return
         }
 
         const sub = await subscribeToPush(VAPID_PUBLIC_KEY)
         if (!sub) {
-          setError('Failed to register push subscription')
+          setError(t('settings.errors.subscriptionFailed'))
           setStatus('error')
           return
         }
 
         const json = sub.toJSON()
         if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
-          setError('Invalid push subscription payload')
+          setError(t('settings.errors.invalidSubscription'))
           setStatus('error')
           return
         }
@@ -116,7 +117,7 @@ export function SettingsPage() {
         void trackEvent('push_opt_out')
       }
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError(t('common.errors.generic'))
       setStatus('error')
     } finally {
       setStatus('idle')
@@ -128,6 +129,10 @@ export function SettingsPage() {
       <Suspense fallback={<div className="h-32 rounded-lg bg-muted/40" aria-hidden />}>
         <IntegrationsSection />
       </Suspense>
+
+      <CardShell title={t('common.language')}>
+        <LanguageToggle />
+      </CardShell>
 
       <CardShell title={t('settings.focusWindow')}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -184,7 +189,7 @@ export function SettingsPage() {
 
           {!canEnable && (
             <p className="text-xs text-muted-foreground">
-              Notifications are not supported in this browser.
+              {t('settings.notificationsUnsupported')}
             </p>
           )}
           {error && <p className="text-xs text-amber-700">{error}</p>}

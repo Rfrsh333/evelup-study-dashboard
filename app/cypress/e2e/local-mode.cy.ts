@@ -1,7 +1,11 @@
 describe('Local Mode - Supabase Fallback', () => {
   beforeEach(() => {
-    cy.visit('/')
-    cy.clearLocalStorage()
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+        win.localStorage.setItem('levelup-language', 'nl')
+      },
+    })
   })
 
   it('should work without Supabase connection', () => {
@@ -10,7 +14,7 @@ describe('Local Mode - Supabase Fallback', () => {
 
     // Verify app loads
     cy.get('body').should('exist')
-    cy.contains('Start hier').should('be.visible')
+    cy.getByTestId('start-here-card').should('be.visible')
   })
 
   it('should persist data to localStorage in local mode', () => {

@@ -1,5 +1,7 @@
 # LevelUp - Study Performance Dashboard
 
+[![CI](https://github.com/Rfrsh333/evelup-study-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Rfrsh333/evelup-study-dashboard/actions/workflows/ci.yml)
+
 > Zie je studie-momentum. Bouw discipline. Haal je deadlines.
 
 A retention-focused SaaS for HBO students in the Netherlands. Track daily objectives, build study momentum, and level up your academic performance.
@@ -130,6 +132,31 @@ All tables have Row Level Security enabled.
 4. Deploy from GitHub
 
 ## Development
+
+### Running Tests Locally
+
+```bash
+# Run unit tests (Vitest)
+npm run test:run
+
+# Run tests in watch mode
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run Cypress E2E tests (interactive)
+npm run cypress:open
+
+# Run Cypress E2E tests (headless)
+npm run cypress:run
+```
+
+**CI Pipeline:**
+- Quality checks (lint + unit tests) run on every PR and push to main
+- Build verification runs in parallel
+- E2E tests (4 parallel shards) run only on PR and main branch pushes
+- See [Branch Protection Guide](../docs/BRANCH_PROTECTION.md) for setting up required checks
 
 ### Seed Demo Data
 Click "Demo Data" button in header to load sample data for testing.

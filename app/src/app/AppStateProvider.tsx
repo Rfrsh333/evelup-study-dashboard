@@ -743,6 +743,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         preferredFocusEnd: '18:00',
         preferredFocusMinutes: 25,
       },
+      tier: 'free',
       version: 1,
       lastUpdated: new Date(),
     })

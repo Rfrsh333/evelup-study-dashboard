@@ -222,6 +222,7 @@ export interface AppState {
   dailyObjectives: DailyObjectivesState | null
   weeklyChallenge: WeeklyChallengeState | null
   preferences: UserPreferences
+  tier: UserTier
   version: number
   lastUpdated: Date
 }

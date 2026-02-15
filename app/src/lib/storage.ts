@@ -116,6 +116,7 @@ const AppStateSchema = z.object({
   dailyObjectives: DailyObjectivesStateSchema.nullable(),
   weeklyChallenge: WeeklyChallengeStateSchema.nullable(),
   preferences: UserPreferencesSchema,
+  tier: z.enum(['free', 'elite']).default('free'),
   version: z.number(),
   lastUpdated: z.coerce.date(),
 })
@@ -149,6 +150,7 @@ export function getDefaultAppState(): AppState {
       preferredFocusEnd: '18:00',
       preferredFocusMinutes: 25,
     },
+    tier: 'free',
     version: CURRENT_VERSION,
     lastUpdated: new Date(),
   }

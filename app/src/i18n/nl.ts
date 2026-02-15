@@ -444,6 +444,45 @@ export const nl = {
       subtitle: 'Run supabase-schema.sql in Supabase → SQL Editor.',
     },
   },
+
+  // Elite tier
+  elite: {
+    badge: 'Elite',
+    freeBadge: 'Free',
+    upgradeCta: 'Upgrade to Elite',
+    upgradeTitle: 'Unlock Elite Performance',
+    upgradeSubtitle: '€2.50/month · Cancel anytime',
+    features: {
+      historyDays: '90-day performance history',
+      groups: 'Private study groups (max 5)',
+      breakdown: 'Detailed index breakdown',
+      reports: 'Monthly performance reports',
+    },
+    locked: {
+      groups: 'Performance groups — Elite only',
+      breakdown: 'Detailed breakdown — Elite only',
+      history: '90-day history — Elite only',
+      reports: 'Monthly reports — Elite only',
+    },
+    comparison: {
+      title: 'Free vs Elite',
+      free: 'Free',
+      elite: 'Elite',
+      featureIndex: 'Performance Index',
+      featureHistory: 'History',
+      featureGroups: 'Groups',
+      featureReports: 'Reports',
+      featureTrends: 'Trends',
+      basicIndex: 'Basic (0-100)',
+      fullBreakdown: 'Full breakdown',
+      sevenDays: '7 days',
+      ninetyDays: '90 days',
+      noGroups: 'Not available',
+      upToFive: 'Up to 5',
+      weekOnly: 'Week-over-week',
+      fullTrends: '90-day trends',
+    },
+  },
 } as const
 
 // Type that represents the structure but allows any string values

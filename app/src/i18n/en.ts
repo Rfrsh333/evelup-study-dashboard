@@ -16,28 +16,28 @@ export const en = {
 
   // Momentum modes
   momentum: {
-    title: 'Momentum this week',
-    score: 'Score',
+    title: 'Performance Index',
+    score: 'Index',
     breakdown: 'Breakdown',
     consistency: 'Consistency',
-    deadlineControl: 'Deadline control',
-    focusScore: 'Focus score',
-    streak: 'Streak',
+    deadlineControl: 'Deadline adherence',
+    focusScore: 'Focus consistency',
+    streak: 'Weekly streak',
     dayStreak: 'Day streak',
     sessions: 'Sessions',
 
     // Mode-specific guidance
-    recoveryMode: 'Recovery mode',
-    stableMode: 'Stable mode',
-    performanceMode: 'Performance mode',
+    recoveryMode: 'Recovery',
+    stableMode: 'Baseline',
+    performanceMode: 'Elite',
 
-    recoveryGuidance: 'Recovery mode — focus on consistency today.',
-    stableGuidance: 'Stable mode — keep your rhythm.',
-    performanceGuidance: 'Performance mode — build a lead.',
+    recoveryGuidance: 'Recovery mode. Restore baseline today.',
+    stableGuidance: 'Baseline maintained. Push harder.',
+    performanceGuidance: 'Elite performance secured.',
 
     // Percentile
-    topPercentile: 'Top {percentile}% this week',
-    basedOnActiveUsers: 'Based on active users',
+    topPercentile: 'Top {percentile}%',
+    basedOnActiveUsers: 'Active students this week',
 
     // Badges
     top50Badge: 'Top 50%',
@@ -47,52 +47,59 @@ export const en = {
 
   // Daily objectives
   dailyObjectives: {
-    title: 'Daily goals',
-    titleCompleted: 'Daily goals completed!',
-    bonusReceived: '+{xp} XP bonus received',
-    progressCount: '{completed} of {total} completed',
+    title: 'Today',
+    titleCompleted: 'Objectives complete.',
+    bonusReceived: '+{xp} XP secured',
+    progressCount: '{completed}/{total} complete',
     bonusXP: 'Bonus XP',
-    markComplete: 'Mark complete',
+    markComplete: 'Complete',
 
     // New performance-driven copy
-    headerAfterCollege: 'Your focus block after class',
-    startFocusButton: 'Start 25 min focus',
+    headerAfterCollege: 'Lock in after class',
+    startFocusButton: 'Start session',
 
     // Micro feedback
-    oneSessionForBonus: '1 more session for bonus XP',
-    onTrackThisWeek: "You're on track this week",
+    oneSessionForBonus: '1 session left for bonus',
+    onTrackThisWeek: 'On track',
 
     // Objective types
-    focusSessions: 'Complete {target} focus sessions',
-    studyMinutes: 'Study for {target} minutes',
-    deadlineReview: 'Review upcoming deadlines',
+    focusSessions: '{target} focus sessions',
+    studyMinutes: '{target} minutes',
+    deadlineReview: 'Review deadlines',
 
     // Units
-    minutes: 'minutes',
+    minutes: 'min',
     sessions: 'sessions',
   },
 
   // Weekly challenges
   weeklyChallenge: {
-    title: 'Weekly challenge',
-    completed: 'Challenge completed — bonus XP earned',
-    inProgress: '{current} of {target}',
+    title: 'Weekly target',
+    completed: 'Target achieved — bonus secured',
+    inProgress: '{current}/{target}',
     bonusXP: '+{xp} XP',
 
     // Challenge types
-    focusSessions: '{target} focus sessions this week',
-    studyDays: '{target} study days this week',
-    studyMinutes: '{target} study minutes this week',
+    focusSessions: '{target} sessions',
+    studyDays: '{target} active days',
+    studyMinutes: '{target} minutes',
   },
 
   // Focus
   focus: {
-    title: 'Focus session',
-    start: 'Start focus',
+    title: 'Session',
+    start: 'Start',
     stop: 'Stop',
     complete: 'Complete',
-    duration: '{minutes} minutes',
-    xpAwarded: '+{xp} XP earned',
+    duration: '{minutes} min',
+    xpAwarded: '+{xp} XP',
+  },
+
+  // Focus block card
+  focusBlock: {
+    title: 'Focus session',
+    helper: 'Maintain consistency. Execute daily.',
+    ctaSecondary: 'View schedule',
   },
 
   // Deadlines
@@ -139,24 +146,24 @@ export const en = {
   // Retention messaging
   retention: {
     // After-college ritual
-    withinStudyWindow: 'This is your focus block.',
-    outsideStudyWindow: 'Plan your next focus block.',
+    withinStudyWindow: 'Execute now.',
+    outsideStudyWindow: 'Schedule next block.',
 
     // Loss aversion
-    inactiveWarning: "Your momentum will drop if you don't do anything today. 1 session is enough.",
-    streakBroken: 'Fresh start. Get 1 session today.',
+    inactiveWarning: 'Your index drops if you skip today. 1 session protects your average.',
+    streakBroken: 'Streak lost. Recover today.',
 
     // Variable reward
-    consistencyRising: 'Your consistency is rising faster than last week.',
-    goodProgress: 'Strong progress this week.',
-    keepGoing: 'Great work — keep it up.',
+    consistencyRising: 'Consistency rising faster than last week.',
+    goodProgress: 'Strong week. Maintain position.',
+    keepGoing: 'Consistency secured.',
   },
 
   // Level up
   levelUp: {
-    title: 'Level up!',
-    newLevel: "You're now level {level}",
-    congrats: 'Congratulations!',
+    title: 'Level {level}',
+    newLevel: 'Level {level} achieved',
+    congrats: 'Progress confirmed.',
     continue: 'Continue',
   },
 
@@ -352,30 +359,30 @@ export const en = {
 
   today: {
     school: {
-      title: 'School: priorities',
-      cta: 'Go to deadlines overview',
-      empty: 'No urgent school deadlines within 72h.',
+      title: 'Priorities',
+      cta: 'View deadlines',
+      empty: 'No urgent deadlines (72h).',
     },
     personal: {
-      title: 'Personal: today plan',
+      title: 'Schedule',
       cta: 'Import calendar',
-      empty: 'No personal events today.',
+      empty: 'No events today.',
       viewWeek: 'View week',
     },
     focusSuggestion: {
-      title: 'Suggested focus block',
-      body: 'You have a free slot at {time}. Schedule {minutes} min focus.',
+      title: 'Suggested session',
+      body: 'Free slot at {time}. Schedule {minutes} min.',
       reason: {
-        preferred: 'Fits your routine (after class).',
-        deadline: 'Before your next deadline.',
-        gap: 'Largest free slot today.',
+        preferred: 'Optimal window (post-class).',
+        deadline: 'Before next deadline.',
+        gap: 'Largest free block.',
       },
       cta: {
-        schedule: 'Schedule focus block',
-        otherTime: 'Pick another time',
+        schedule: 'Schedule session',
+        otherTime: 'Different time',
       },
-      empty: 'No free slot found. Plan manually.',
-      focusTitle: 'Focus block ({minutes} min)',
+      empty: 'No free slot. Manual scheduling required.',
+      focusTitle: 'Focus ({minutes} min)',
     },
   },
 
@@ -384,10 +391,15 @@ export const en = {
       school: 'School',
       personal: 'Personal',
     },
-    schoolTitle: 'School deadlines',
-    personalTitle: 'Personal events',
-    emptySchool: 'No school deadlines yet.',
-    emptyPersonal: 'No personal events yet.',
+    schoolTitle: 'Deadlines',
+    personalTitle: 'Schedule',
+    emptySchool: 'No deadlines.',
+    emptyPersonal: 'No events.',
+    preview: {
+      title: 'Week overview',
+      empty: 'No items this week.',
+      viewWeek: 'View full week',
+    },
     tag: {
       school: 'School',
       personal: 'Personal',
@@ -396,23 +408,27 @@ export const en = {
 
   dashboard: {
     promise: {
-      title: 'See what you need to do today to pass — and turn it into focus blocks.',
-      subtitle: 'Start here and get clarity in 3 quick steps.',
+      title: 'Elite Academic Performance Optimizer',
+      subtitle: 'Track performance. Protect your average. Stay in top 10%.',
+    },
+    hero: {
+      title: 'Performance',
+      subtitle: 'Index, rankings, and targets',
     },
     onboarding: {
       step: 'Step {step}',
-      step1: 'Import your schedule (ICS)',
-      step2: 'Import your block progress (PDF/CSV)',
-      step3: 'Plan your focus block for today',
+      step1: 'Import schedule (ICS)',
+      step2: 'Import grades (PDF/CSV)',
+      step3: 'Schedule first session',
     },
     startHere: {
-      title: 'Start here',
-      subtitle: 'In 2 minutes you’ll know what to do today to pass.',
-      compact: 'Check your week or import more data to plan faster.',
+      title: 'Setup required',
+      subtitle: 'Connect data to calculate Performance Index.',
+      compact: 'Import schedule and grades for full performance tracking.',
       bullets: {
-        importCalendar: 'Import your schedule → see your week',
-        importGrades: 'Import your grades → see what you need to score',
-        makeFocusBlocks: 'Create focus blocks to get it done',
+        importCalendar: 'Import schedule → weekly planning',
+        importGrades: 'Import grades → performance tracking',
+        makeFocusBlocks: 'Execute sessions → maintain index',
       },
       cta: {
         importCalendar: 'Import schedule',

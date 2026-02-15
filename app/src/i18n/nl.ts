@@ -16,28 +16,28 @@ export const nl = {
 
   // Momentum modes
   momentum: {
-    title: 'Momentum deze week',
-    score: 'Score',
-    breakdown: 'Uitsplitsing',
-    consistency: 'Consistentie',
-    deadlineControl: 'Deadline controle',
-    focusScore: 'Focus score',
-    streak: 'Streak',
-    dayStreak: 'Dag streak',
-    sessions: 'Sessies',
+    title: 'Performance Index',
+    score: 'Index',
+    breakdown: 'Breakdown',
+    consistency: 'Consistency',
+    deadlineControl: 'Deadline adherence',
+    focusScore: 'Focus consistency',
+    streak: 'Weekly streak',
+    dayStreak: 'Day streak',
+    sessions: 'Sessions',
 
     // Mode-specific guidance
-    recoveryMode: 'Herstelmodus',
-    stableMode: 'Stabiele modus',
-    performanceMode: 'Prestatiemodus',
+    recoveryMode: 'Recovery',
+    stableMode: 'Baseline',
+    performanceMode: 'Elite',
 
-    recoveryGuidance: 'Herstelmodus — focus op consistentie vandaag.',
-    stableGuidance: 'Stabiele modus — houd je ritme vast.',
-    performanceGuidance: 'Prestatiemodus — bouw een voorsprong.',
+    recoveryGuidance: 'Recovery mode. Restore baseline today.',
+    stableGuidance: 'Baseline maintained. Push harder.',
+    performanceGuidance: 'Elite performance secured.',
 
     // Percentile
-    topPercentile: 'Top {percentile}% deze week',
-    basedOnActiveUsers: 'Gebaseerd op actieve gebruikers',
+    topPercentile: 'Top {percentile}%',
+    basedOnActiveUsers: 'Active students this week',
 
     // Badges
     top50Badge: 'Top 50%',
@@ -47,52 +47,59 @@ export const nl = {
 
   // Daily objectives
   dailyObjectives: {
-    title: 'Dagdoelen',
-    titleCompleted: 'Dagdoelen voltooid!',
-    bonusReceived: '+{xp} XP bonus ontvangen',
-    progressCount: '{completed} van {total} voltooid',
+    title: 'Today',
+    titleCompleted: 'Objectives complete.',
+    bonusReceived: '+{xp} XP secured',
+    progressCount: '{completed}/{total} complete',
     bonusXP: 'Bonus XP',
-    markComplete: 'Markeer voltooid',
+    markComplete: 'Complete',
 
     // New performance-driven copy
-    headerAfterCollege: 'Jouw focusblok na college',
-    startFocusButton: 'Start 25 min focus',
+    headerAfterCollege: 'Lock in after class',
+    startFocusButton: 'Start session',
 
     // Micro feedback
-    oneSessionForBonus: 'Nog 1 sessie voor bonus XP',
-    onTrackThisWeek: 'Je bent op koers deze week',
+    oneSessionForBonus: '1 session left for bonus',
+    onTrackThisWeek: 'On track',
 
     // Objective types
-    focusSessions: 'Voltooi {target} focussessies',
-    studyMinutes: 'Studeer {target} minuten',
-    deadlineReview: 'Bekijk aankomende deadlines',
+    focusSessions: '{target} focus sessions',
+    studyMinutes: '{target} minutes',
+    deadlineReview: 'Review deadlines',
 
     // Units
-    minutes: 'minuten',
-    sessions: 'sessies',
+    minutes: 'min',
+    sessions: 'sessions',
   },
 
   // Weekly challenges
   weeklyChallenge: {
-    title: 'Weekchallenge',
-    completed: 'Challenge voltooid — bonus XP verdiend',
-    inProgress: '{current} van {target}',
+    title: 'Weekly target',
+    completed: 'Target achieved — bonus secured',
+    inProgress: '{current}/{target}',
     bonusXP: '+{xp} XP',
 
     // Challenge types
-    focusSessions: '{target} focussessies deze week',
-    studyDays: '{target} studeerdagen deze week',
-    studyMinutes: '{target} studeerminuten deze week',
+    focusSessions: '{target} sessions',
+    studyDays: '{target} active days',
+    studyMinutes: '{target} minutes',
   },
 
   // Focus
   focus: {
-    title: 'Focus sessie',
-    start: 'Start focus',
+    title: 'Session',
+    start: 'Start',
     stop: 'Stop',
-    complete: 'Voltooid',
-    duration: '{minutes} minuten',
-    xpAwarded: '+{xp} XP verdiend',
+    complete: 'Complete',
+    duration: '{minutes} min',
+    xpAwarded: '+{xp} XP',
+  },
+
+  // Focus block card
+  focusBlock: {
+    title: 'Focus session',
+    helper: 'Maintain consistency. Execute daily.',
+    ctaSecondary: 'View schedule',
   },
 
   // Deadlines
@@ -139,25 +146,25 @@ export const nl = {
   // Retention messaging
   retention: {
     // After-college ritual
-    withinStudyWindow: 'Dit is je focusblok.',
-    outsideStudyWindow: 'Plan je volgende focusblok.',
+    withinStudyWindow: 'Execute now.',
+    outsideStudyWindow: 'Schedule next block.',
 
     // Loss aversion
-    inactiveWarning: 'Je momentum zakt als je vandaag niets doet. 1 sessie is genoeg.',
-    streakBroken: 'Nieuwe start. Pak vandaag 1 sessie.',
+    inactiveWarning: 'Your index drops if you skip today. 1 session protects your average.',
+    streakBroken: 'Streak lost. Recover today.',
 
     // Variable reward
-    consistencyRising: 'Je consistentie stijgt sneller dan vorige week.',
-    goodProgress: 'Sterke voortgang deze week.',
-    keepGoing: 'Goed bezig — houd dit vast.',
+    consistencyRising: 'Consistency rising faster than last week.',
+    goodProgress: 'Strong week. Maintain position.',
+    keepGoing: 'Consistency secured.',
   },
 
   // Level up
   levelUp: {
-    title: 'Level omhoog!',
-    newLevel: 'Je bent nu level {level}',
-    congrats: 'Gefeliciteerd!',
-    continue: 'Ga verder',
+    title: 'Level {level}',
+    newLevel: 'Level {level} achieved',
+    congrats: 'Progress confirmed.',
+    continue: 'Continue',
   },
 
   // Settings
@@ -352,72 +359,81 @@ export const nl = {
 
   today: {
     school: {
-      title: 'School: Prioriteiten',
-      cta: 'Ga naar Deadlines overzicht',
-      empty: 'Geen urgente schooldeadlines binnen 72u.',
+      title: 'Priorities',
+      cta: 'View deadlines',
+      empty: 'No urgent deadlines (72h).',
     },
     personal: {
-      title: 'Persoonlijk: Planning vandaag',
-      cta: 'Importeer agenda',
-      empty: 'Geen persoonlijke events vandaag.',
-      viewWeek: 'Bekijk week',
+      title: 'Schedule',
+      cta: 'Import calendar',
+      empty: 'No events today.',
+      viewWeek: 'View week',
     },
     focusSuggestion: {
-      title: 'Focusblok voorstel',
-      body: 'Je hebt een vrij blok om {time}. Plan {minutes} min focus.',
+      title: 'Suggested session',
+      body: 'Free slot at {time}. Schedule {minutes} min.',
       reason: {
-        preferred: 'Past in je ritme (na college).',
-        deadline: 'Voor je eerstvolgende deadline.',
-        gap: 'Grootste vrije blok vandaag.',
+        preferred: 'Optimal window (post-class).',
+        deadline: 'Before next deadline.',
+        gap: 'Largest free block.',
       },
       cta: {
-        schedule: 'Plan focusblok',
-        otherTime: 'Andere tijd',
+        schedule: 'Schedule session',
+        otherTime: 'Different time',
       },
-      empty: 'Geen vrij blok gevonden. Plan handmatig.',
-      focusTitle: 'Focusblok ({minutes} min)',
+      empty: 'No free slot. Manual scheduling required.',
+      focusTitle: 'Focus ({minutes} min)',
     },
   },
 
   week: {
     filter: {
       school: 'School',
-      personal: 'Persoonlijk',
+      personal: 'Personal',
     },
-    schoolTitle: 'Schooldeadlines',
-    personalTitle: 'Persoonlijke events',
-    emptySchool: 'Nog geen schooldeadlines.',
-    emptyPersonal: 'Nog geen persoonlijke events.',
+    schoolTitle: 'Deadlines',
+    personalTitle: 'Schedule',
+    emptySchool: 'No deadlines.',
+    emptyPersonal: 'No events.',
+    preview: {
+      title: 'Week overview',
+      empty: 'No items this week.',
+      viewWeek: 'View full week',
+    },
     tag: {
       school: 'School',
-      personal: 'Persoonlijk',
+      personal: 'Personal',
     },
   },
 
   dashboard: {
     promise: {
-      title: 'Zie wat je vandaag moet doen om te slagen — en maak er focusblokken van.',
-      subtitle: 'Start hier en krijg snel duidelijkheid in 3 stappen.',
+      title: 'Elite Academic Performance Optimizer',
+      subtitle: 'Track performance. Protect your average. Stay in top 10%.',
+    },
+    hero: {
+      title: 'Performance',
+      subtitle: 'Index, rankings, and targets',
     },
     onboarding: {
-      step: 'Stap {step}',
-      step1: 'Importeer je rooster (ICS)',
-      step2: 'Importeer je blokvoortgang (PDF/CSV)',
-      step3: 'Maak je focusblok voor vandaag',
+      step: 'Step {step}',
+      step1: 'Import schedule (ICS)',
+      step2: 'Import grades (PDF/CSV)',
+      step3: 'Schedule first session',
     },
     startHere: {
-      title: 'Start hier',
-      subtitle: 'In 2 minuten weet je wat je vandaag moet doen om te slagen.',
-      compact: 'Bekijk je week of importeer extra data om sneller te plannen.',
+      title: 'Setup required',
+      subtitle: 'Connect data to calculate Performance Index.',
+      compact: 'Import schedule and grades for full performance tracking.',
       bullets: {
-        importCalendar: 'Importeer je rooster → zie je week',
-        importGrades: 'Importeer je cijfers → zie wat je moet halen',
-        makeFocusBlocks: 'Maak focusblokken om het af te maken',
+        importCalendar: 'Import schedule → weekly planning',
+        importGrades: 'Import grades → performance tracking',
+        makeFocusBlocks: 'Execute sessions → maintain index',
       },
       cta: {
-        importCalendar: 'Importeer rooster',
-        importGrades: 'Importeer cijfers',
-        viewWeek: 'Bekijk week',
+        importCalendar: 'Import schedule',
+        importGrades: 'Import grades',
+        viewWeek: 'View week',
       },
     },
   },

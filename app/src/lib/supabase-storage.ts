@@ -44,12 +44,15 @@ export async function loadAppStateFromSupabase(): Promise<AppState> {
     }
 
     // Parse dates from JSON
-    const state = data.state as AppState & { deadlines?: any[] }
+    const state = data.state as AppState & { deadlines?: unknown[] }
     if (!state.schoolDeadlines && Array.isArray(state.deadlines)) {
-      state.schoolDeadlines = state.deadlines.map((dl) => ({
-        ...dl,
-        source: dl.source ?? 'manual',
-      }))
+      state.schoolDeadlines = state.deadlines.map((dl) => {
+        const deadline = dl as Record<string, unknown>
+        return {
+          ...deadline,
+          source: deadline.source ?? 'manual',
+        }
+      }) as AppState['schoolDeadlines']
       delete state.deadlines
     }
     if (!state.personalEvents) {

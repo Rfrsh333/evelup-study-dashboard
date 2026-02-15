@@ -2,6 +2,21 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { isUserStateTableMissing } from '@/lib/supabase-errors'
 import { startOfWeek } from 'date-fns'
 
+interface StudyLogLike {
+  date?: string
+  minutes?: number
+}
+
+interface FocusSessionLike {
+  startTime?: string
+  completed?: boolean
+}
+
+interface UserStateLike {
+  studyLogs?: StudyLogLike[]
+  focusSessions?: FocusSessionLike[]
+}
+
 /**
  * Calculate user's percentile for this week
  * Returns 0-100 where 100 is the best
@@ -47,25 +62,31 @@ export async function calculatePercentile(userScore: number): Promise<number | u
 
     for (const userState of userStates) {
       try {
-        const state = typeof userState.state === 'string'
-          ? JSON.parse(userState.state)
-          : userState.state
+        const state: UserStateLike =
+          typeof userState.state === 'string'
+            ? (JSON.parse(userState.state) as UserStateLike)
+            : (userState.state as UserStateLike)
 
         // Calculate or extract momentum score
         // For now, we'll use a simplified approach
         // In production, you'd recalculate momentum for each user
         if (state && typeof state === 'object') {
           // Simple heuristic: use study logs and focus sessions as proxy
-          const studyLogs = state.studyLogs || []
-          const focusSessions = state.focusSessions || []
+          const studyLogs = state.studyLogs ?? []
+          const focusSessions = state.focusSessions ?? []
 
           // Calculate simple week score (not perfect, but works for MVP)
           const weekMinutes = studyLogs
-            .filter((log: any) => new Date(log.date) >= weekStart)
-            .reduce((sum: number, log: any) => sum + (log.minutes || 0), 0)
+            .filter((log) => Boolean(log.date) && new Date(log.date as string) >= weekStart)
+            .reduce((sum, log) => sum + (log.minutes ?? 0), 0)
 
           const weekSessions = focusSessions
-            .filter((session: any) => new Date(session.startTime) >= weekStart && session.completed)
+            .filter(
+              (session) =>
+                Boolean(session.startTime) &&
+                new Date(session.startTime as string) >= weekStart &&
+                Boolean(session.completed)
+            )
             .length
 
           // Simple score: normalize minutes to 0-60 and sessions to 0-40
@@ -74,7 +95,7 @@ export async function calculatePercentile(userScore: number): Promise<number | u
 
           scores.push(minutesScore + sessionsScore)
         }
-      } catch (e) {
+      } catch {
         // Skip malformed states
         continue
       }

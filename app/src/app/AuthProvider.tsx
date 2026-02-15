@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { supabase, isSupabaseConfigured, setGlobalDbUnavailable, supabaseStatus } from '@/lib/supabase'
@@ -71,10 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return
         setError('Failed to load auth session')
       } finally {
-        if (cancelled) return
-        resolved = true
-        setLoading(false)
-        if (import.meta.env.DEV) console.debug('Auth loading false')
+        if (!cancelled) {
+          resolved = true
+          setLoading(false)
+          if (import.meta.env.DEV) console.debug('Auth loading false')
+        }
       }
     }
 

@@ -22,7 +22,7 @@ export function WeeklyChallengeCard() {
         completed: challenge.completed,
       })
     }
-  }, [challenge?.completed])
+  }, [challenge])
 
   if (!challenge) return null
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { nl } from './nl'
@@ -7,7 +8,7 @@ import { isSupabaseTableMissing } from '@/lib/supabase-errors'
 
 export type Language = 'nl' | 'en'
 
-const translations: Record<Language, any> = { nl, en }
+const translations: Record<Language, Record<string, unknown>> = { nl, en }
 
 interface I18nContextValue {
   language: Language
@@ -22,13 +23,13 @@ const STORAGE_KEY = 'levelup-language'
 // Track missing keys in DEV to avoid spam (memoized)
 const missingKeys = new Set<string>()
 
-function getNestedValue(obj: any, path: string): string {
+function getNestedValue(obj: unknown, path: string): string {
   const keys = path.split('.')
-  let value = obj
+  let value: unknown = obj
 
   for (const key of keys) {
     if (value && typeof value === 'object' && key in value) {
-      value = value[key]
+      value = (value as Record<string, unknown>)[key]
     } else {
       // Missing key: warn once in DEV
       if (import.meta.env.DEV && !missingKeys.has(path)) {
@@ -47,7 +48,7 @@ function replacePlaceholders(text: string, params?: Record<string, string | numb
   return text.replace(/\{(\w+)\}/g, (match, key) => (key in params ? String(params[key]) : match))
 }
 
-function isValidLanguage(v: any): v is Language {
+function isValidLanguage(v: unknown): v is Language {
   return v === 'nl' || v === 'en'
 }
 

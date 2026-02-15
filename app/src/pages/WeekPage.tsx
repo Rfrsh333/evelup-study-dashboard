@@ -11,9 +11,13 @@ export function WeekPage() {
   const { t } = useTranslation()
   const [filter, setFilter] = useState<WeekFilter>('school')
   const [highlightPersonal, setHighlightPersonal] = useState(false)
-  const now = new Date()
-  const windowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
-  const windowEnd = new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000)
+  const { windowStart, windowEnd } = useMemo(() => {
+    const now = new Date()
+    return {
+      windowStart: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+      windowEnd: new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000),
+    }
+  }, [])
   const normalizedPersonal = useMemo(
     () =>
       state.personalEvents
@@ -60,8 +64,8 @@ export function WeekPage() {
       })
     }
   }, [
-    state.personalEvents.length,
-    state.schoolDeadlines.length,
+    state.personalEvents,
+    state.schoolDeadlines,
     personalInWindow.length,
     schoolInWindow.length,
     windowStart,
@@ -70,6 +74,7 @@ export function WeekPage() {
 
   useEffect(() => {
     if (filter === 'school' && schoolInWindow.length === 0 && personalInWindow.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFilter('personal')
     }
   }, [filter, personalInWindow.length, schoolInWindow.length])
@@ -77,6 +82,7 @@ export function WeekPage() {
   useEffect(() => {
     const count = Number(localStorage.getItem('levelup-new-personal-events') || '0')
     if (count > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightPersonal(true)
       setFilter('personal')
       localStorage.removeItem('levelup-new-personal-events')

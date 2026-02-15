@@ -17,6 +17,7 @@ export function BlockProgressCard() {
     if (activeBlock) return
     const stored = localStorage.getItem(BLOCK_FILTER_KEY)
     if (stored && blockIds.includes(stored)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveBlock(stored)
       return
     }
@@ -28,6 +29,7 @@ export function BlockProgressCard() {
   useEffect(() => {
     const flag = localStorage.getItem('levelup-new-assessments')
     if (flag === '1') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlight(true)
       localStorage.removeItem('levelup-new-assessments')
       const timer = window.setTimeout(() => setHighlight(false), 3000)

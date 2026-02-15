@@ -17,7 +17,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock IntersectionObserver
-// @ts-ignore - globalThis is available in test environment
+// @ts-expect-error - test environment injects IntersectionObserver on globalThis
 globalThis.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
@@ -26,7 +26,7 @@ globalThis.IntersectionObserver = class IntersectionObserver {
     return []
   }
   unobserve() {}
-} as any
+} as unknown as typeof IntersectionObserver
 
 // Clean up after each test
 afterEach(() => {

@@ -68,7 +68,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          state: any // JSONB
+          state: unknown // JSONB
           version: number
           created_at: string
           updated_at: string
@@ -76,7 +76,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          state: any
+          state: unknown
           version?: number
           created_at?: string
           updated_at?: string
@@ -84,7 +84,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          state?: any
+          state?: unknown
           version?: number
           created_at?: string
           updated_at?: string
@@ -95,21 +95,21 @@ export interface Database {
           id: string
           user_id: string
           type: string
-          metadata: any // JSONB
+          metadata: unknown // JSONB
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           type: string
-          metadata?: any
+          metadata?: unknown
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           type?: string
-          metadata?: any
+          metadata?: unknown
           created_at?: string
         }
       }
@@ -235,7 +235,7 @@ export interface Database {
           user_id: string | null
           issuer: string
           deployment_id: string | null
-          context: any
+          context: unknown
           created_at: string
         }
         Insert: {
@@ -243,7 +243,7 @@ export interface Database {
           user_id?: string | null
           issuer: string
           deployment_id?: string | null
-          context?: any
+          context?: unknown
           created_at?: string
         }
         Update: {
@@ -251,7 +251,7 @@ export interface Database {
           user_id?: string | null
           issuer?: string
           deployment_id?: string | null
-          context?: any
+          context?: unknown
           created_at?: string
         }
       }

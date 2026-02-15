@@ -491,7 +491,7 @@ export function IntegrationsSection() {
       courses: distinctCourses.size,
       summary: summaries[0],
     }
-  }, [csvMapping, csvRows])
+  }, [csvMapping, csvRows, blockLabel])
 
   const onboarding = useMemo(
     () => getOnboardingProgress(state, icsUrl),

@@ -30,7 +30,8 @@ export function DialogTrigger({ children, asChild }: { children: React.ReactNode
   const handleClick = () => context.onOpenChange(true)
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { onClick: handleClick } as any)
+    const child = children as React.ReactElement<{ onClick?: () => void }>
+    return React.cloneElement(child, { onClick: handleClick })
   }
 
   return <button onClick={handleClick}>{children}</button>

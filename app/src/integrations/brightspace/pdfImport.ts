@@ -70,7 +70,7 @@ function detectStatus(line: string): 'passed' | 'failed' | 'pending' | null {
 }
 
 function detectCourse(line: string): string | null {
-  const match = line.match(/(?:course|cursus)\s*[:\-]\s*(.+)/i)
+  const match = line.match(/(?:course|cursus)\s*[:-]\s*(.+)/i)
   if (match?.[1]) return match[1].trim()
   return null
 }

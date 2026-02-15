@@ -9,6 +9,7 @@ export function LevelUpNotification() {
 
   useEffect(() => {
     if (derived.levelUpTriggered) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true)
 
       // Auto-hide after 1.5 seconds

@@ -166,10 +166,16 @@ export function loadAppState(): AppState {
 
     const parsed = JSON.parse(stored)
     if (!parsed.schoolDeadlines && Array.isArray(parsed.deadlines)) {
-      parsed.schoolDeadlines = parsed.deadlines.map((dl: any) => ({
-        ...dl,
-        source: dl.source === 'canvas' || dl.source === 'brightspace' ? 'lti' : dl.source ?? 'manual',
-      }))
+      parsed.schoolDeadlines = parsed.deadlines.map((dl: unknown) => {
+        const deadline = dl as { source?: string }
+        return {
+          ...(deadline as Record<string, unknown>),
+          source:
+            deadline.source === 'canvas' || deadline.source === 'brightspace'
+              ? 'lti'
+              : deadline.source ?? 'manual',
+        }
+      })
       delete parsed.deadlines
     }
     if (!parsed.personalEvents) {
@@ -179,16 +185,16 @@ export function loadAppState(): AppState {
       parsed.assessments = []
     }
     if (Array.isArray(parsed.assessments)) {
-      parsed.assessments = parsed.assessments.map((assessment: any) => ({
+      parsed.assessments = parsed.assessments.map((assessment: unknown) => ({
         status: 'pending',
-        ...assessment,
+        ...(assessment as Record<string, unknown>),
       }))
     }
     const validated = AppStateSchema.parse(parsed)
 
     // Version migration logic (if needed in future)
     if (validated.version < CURRENT_VERSION) {
-      return migrateState(validated)
+      return migrateState()
     }
 
     return validated
@@ -222,7 +228,7 @@ export function clearAppState(): void {
 }
 
 // Migrate state from old version to new (placeholder for future)
-function migrateState(_oldState: AppState): AppState {
+function migrateState(): AppState {
   // For now, just return default state if migration needed
   // In future, implement version-specific migrations
   console.warn('State migration triggered, using defaults')

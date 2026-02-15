@@ -99,6 +99,40 @@ export interface DailyObjectivesState {
   bonusXPAwarded: boolean
 }
 
+// Elite Performance Index types
+export interface PerformanceIndexBreakdown {
+  gradeProgression: number // 0-100
+  blockCompletion: number // 0-100
+  focusConsistency: number // 0-100
+  deadlineAdherence: number // 0-100
+  weeklyStreak: number // 0-100
+}
+
+export interface PerformanceTrend {
+  deltaIndex: number
+  deltaPercentage: number
+  direction: 'up' | 'down' | 'stable'
+  weekComparison: string
+}
+
+export interface PerformanceIndex {
+  index: number // 0-100
+  breakdown: PerformanceIndexBreakdown
+  trend: PerformanceTrend
+  targetAverage: number
+  scoreGap: number
+}
+
+// Elite tier definition
+export type UserTier = 'free' | 'elite'
+
+export interface TierFeatures {
+  historyDays: number
+  canJoinGroups: boolean
+  hasDetailedBreakdown: boolean
+  hasMonthlyReport: boolean
+}
+
 export interface DailyObjective {
   id: string
   type: 'focus_sessions' | 'study_minutes' | 'deadline_review'

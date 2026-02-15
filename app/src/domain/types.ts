@@ -133,6 +133,52 @@ export interface TierFeatures {
   hasMonthlyReport: boolean
 }
 
+// Performance groups (Elite tier feature)
+export interface PerformanceGroup {
+  id: string
+  name: string
+  inviteCode: string
+  createdBy: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface GroupMember {
+  id: string
+  groupId: string
+  userId: string
+  joinedAt: Date
+}
+
+export interface WeeklySnapshot {
+  id: string
+  groupId: string
+  userId: string
+  weekStart: Date
+  performanceIndex: number // 0-100
+  percentile: number | null // 0-100
+  createdAt: Date
+}
+
+// UI-specific group view types
+export interface GroupMemberWithStats {
+  userId: string
+  rank: number // 1-based rank in group
+  currentIndex: number
+  previousIndex?: number
+  trend: 'up' | 'down' | 'stable'
+  joinedAt: Date
+}
+
+export interface GroupComparison {
+  groupId: string
+  groupName: string
+  weekStart: Date
+  members: GroupMemberWithStats[]
+  yourRank: number
+  totalMembers: number
+}
+
 export interface DailyObjective {
   id: string
   type: 'focus_sessions' | 'study_minutes' | 'deadline_review'

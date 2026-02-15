@@ -11,6 +11,7 @@ export function BlockProgressCard() {
   const { t } = useTranslation()
   const blockIds = useMemo(() => getBlockIds(state.assessments), [state.assessments])
   const [activeBlock, setActiveBlock] = useState<string>('')
+  const [highlight, setHighlight] = useState(false)
 
   useEffect(() => {
     if (activeBlock) return
@@ -23,6 +24,16 @@ export function BlockProgressCard() {
       setActiveBlock(blockIds[0])
     }
   }, [blockIds, activeBlock])
+
+  useEffect(() => {
+    const flag = localStorage.getItem('levelup-new-assessments')
+    if (flag === '1') {
+      setHighlight(true)
+      localStorage.removeItem('levelup-new-assessments')
+      const timer = window.setTimeout(() => setHighlight(false), 3000)
+      return () => window.clearTimeout(timer)
+    }
+  }, [])
 
   useEffect(() => {
     if (activeBlock) {
@@ -38,7 +49,7 @@ export function BlockProgressCard() {
     : []
 
   return (
-    <CardShell title={t('blockProgress.title')}>
+    <CardShell title={t('blockProgress.title')} className={highlight ? 'ring-2 ring-primary/40' : ''}>
       <div className="flex flex-wrap items-center gap-3">
         <div className="text-sm text-muted-foreground">
           {activeBlock ? t('blockProgress.blockLabel', { block: activeBlock }) : t('blockProgress.noBlock')}

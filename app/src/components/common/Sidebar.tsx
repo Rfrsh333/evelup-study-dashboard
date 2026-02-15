@@ -1,5 +1,6 @@
-import { BarChart3, Settings, TrendingUp } from 'lucide-react'
+import { CalendarDays, Settings, TrendingUp, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/i18n'
 
 export type AppView = 'dashboard' | 'week' | 'insights' | 'settings'
 
@@ -7,15 +8,21 @@ interface SidebarProps {
   className?: string
   currentView: AppView
   onNavigate: (view: AppView) => void
+  showInsights?: boolean
 }
 
-export function Sidebar({ className, currentView, onNavigate }: SidebarProps) {
-  const navItems = [
-    { icon: BarChart3, label: 'Dashboard', view: 'dashboard', disabled: false },
-    { icon: TrendingUp, label: 'Week', view: 'week', disabled: false },
-    { icon: TrendingUp, label: 'Insights', view: 'insights', disabled: false },
-    { icon: Settings, label: 'Settings', view: 'settings', disabled: false },
-  ] as const
+export function Sidebar({ className, currentView, onNavigate, showInsights = false }: SidebarProps) {
+  const { t } = useTranslation()
+  const navItems: Array<{ icon: typeof Home; label: string; view: AppView; disabled: boolean }> = [
+    { icon: Home, label: t('nav.today'), view: 'dashboard', disabled: false },
+    { icon: CalendarDays, label: t('nav.week'), view: 'week', disabled: false },
+  ]
+
+  if (showInsights) {
+    navItems.push({ icon: TrendingUp, label: t('nav.insights'), view: 'insights', disabled: false })
+  }
+
+  navItems.push({ icon: Settings, label: t('nav.integrations'), view: 'settings', disabled: false })
 
   return (
     <aside

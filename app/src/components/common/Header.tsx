@@ -15,6 +15,7 @@ import { useAuth } from '@/app/AuthProvider'
 import { useToast } from '@/components/ui/toast'
 import { getLevelTitle } from '@/domain/xp'
 import { LogOut } from 'lucide-react'
+import { LanguageToggle } from '@/components/common/LanguageToggle'
 
 interface HeaderProps {
   className?: string
@@ -65,6 +66,7 @@ export function Header({ className, currentView }: HeaderProps) {
             <Button variant="outline" size="sm" onClick={() => setResetDialogOpen(true)}>
               Reset
             </Button>
+            <LanguageToggle />
             <Button variant="ghost" size="sm" onClick={() => signOut()}>
               <LogOut className="h-4 w-4" />
             </Button>

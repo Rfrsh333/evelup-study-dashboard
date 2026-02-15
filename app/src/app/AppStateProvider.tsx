@@ -14,6 +14,7 @@ import { loadAppStateFromSupabase, saveAppStateToSupabase, clearAppStateFromSupa
 import { calculateStreak } from '@/domain/streak'
 import { calculateXPState, awardXP, XP_REWARDS } from '@/domain/xp'
 import { calculateMomentumScore } from '@/domain/momentum'
+import { calculatePerformanceIndex } from '@/domain/performance-index'
 import {
   generateDailyObjectives,
   shouldRegenerateObjectives,
@@ -432,11 +433,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       return session.completed && sessionDate >= weekStart && sessionDate <= weekEnd
     }).length
 
+    // Calculate Performance Index
+    const performanceIndex = calculatePerformanceIndex(
+      state.assessments,
+      state.schoolDeadlines,
+      state.focusSessions,
+      state.studyLogs,
+      state.streak,
+      weekStart
+    )
+
     return {
       momentum,
       thisWeekStudyMinutes,
       thisWeekFocusSessions,
       levelUpTriggered,
+      performanceIndex,
+      percentile: momentum.percentileThisWeek,
     }
   }, [state, levelUpTriggered])
 

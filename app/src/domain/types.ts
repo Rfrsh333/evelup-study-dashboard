@@ -186,6 +186,8 @@ export interface DerivedState {
   thisWeekStudyMinutes: number
   thisWeekFocusSessions: number
   levelUpTriggered: boolean
+  performanceIndex: PerformanceIndex
+  percentile?: number
 }
 
 // Quest is an alias for SchoolDeadline (keeping for backward compatibility)

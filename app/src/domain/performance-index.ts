@@ -11,7 +11,7 @@
  * This is the primary metric for the Elite tier positioning.
  */
 
-import { startOfWeek, subWeeks, differenceInDays } from 'date-fns'
+import { startOfWeek, subWeeks } from 'date-fns'
 import type {
   Assessment,
   SchoolDeadline,
@@ -19,7 +19,6 @@ import type {
   StudyLog,
   StreakState,
 } from './types'
-import { getStudyDaysInWeek } from './streak'
 
 // Performance Index weights (must sum to 100%)
 const WEIGHTS = {
@@ -261,7 +260,7 @@ function calculatePerformanceIndexRaw(
   assessments: Assessment[],
   deadlines: SchoolDeadline[],
   focusSessions: FocusSession[],
-  studyLogs: StudyLog[],
+  _studyLogs: StudyLog[],
   streakState: StreakState,
   weekStart: Date
 ): number {

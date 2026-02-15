@@ -8,9 +8,10 @@ import { StartHereCard } from '@/components/common/StartHereCard'
 import { TodayPrioritiesCard } from '@/components/features/home/TodayPrioritiesCard'
 import { FocusBlockCard } from '@/components/features/home/FocusBlockCard'
 import { WeekPreviewCard } from '@/components/features/home/WeekPreviewCard'
+import { EliteHeader } from '@/components/features/performance/EliteHeader'
 
 export function DashboardPage() {
-  const { state, addPersonalEvent } = useAppState()
+  const { state, derived, addPersonalEvent } = useAppState()
   const { t } = useTranslation()
   const { schoolUrgent, personalToday } = getTodayOverview(
     state.schoolDeadlines,
@@ -126,6 +127,13 @@ export function DashboardPage() {
         <h1 className="text-2xl font-semibold">{t('dashboard.hero.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('dashboard.hero.subtitle')}</p>
       </header>
+
+      {hasAnyData && (
+        <EliteHeader
+          performanceIndex={derived.performanceIndex}
+          percentile={derived.percentile}
+        />
+      )}
 
       {!hasAnyData && <StartHereCard />}
       {hasAnyData && <StartHereCard compact />}

@@ -22,6 +22,7 @@ const PersonalEventSchema = z.object({
   title: z.string(),
   start: z.coerce.date(),
   end: z.coerce.date(),
+  location: z.string().optional(),
   source: z.enum(['ics', 'manual']),
   tag: z.enum(['focus_block']).optional(),
 })

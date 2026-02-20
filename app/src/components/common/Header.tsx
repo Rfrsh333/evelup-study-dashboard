@@ -60,7 +60,7 @@ export function Header({ className, currentView }: HeaderProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={handleSeedDemo}>
+            <Button variant="outline" size="sm" onClick={handleSeedDemo} data-testid="header-demo-data">
               Demo Data
             </Button>
             <Button variant="outline" size="sm" onClick={() => setResetDialogOpen(true)}>

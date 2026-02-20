@@ -18,6 +18,7 @@ export interface PersonalEvent {
   title: string
   start: Date
   end: Date
+  location?: string
   source: 'ics' | 'manual'
   tag?: 'focus_block'
 }

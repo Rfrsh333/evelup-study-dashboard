@@ -88,6 +88,7 @@ function normalizePersonalEvent(event: PersonalEventInput, fallbackId?: string):
     title: event.title,
     start,
     end,
+    location: event.location,
     source: event.source,
     tag: event.tag,
   }

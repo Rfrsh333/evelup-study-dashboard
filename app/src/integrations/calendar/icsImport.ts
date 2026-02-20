@@ -294,6 +294,7 @@ export function classifyIcsEvents(events: NormalizedIcsEvent[]): {
         title: event.title,
         start: event.start,
         end: event.end,
+        location: event.location,
         source: 'ics',
       },
     })

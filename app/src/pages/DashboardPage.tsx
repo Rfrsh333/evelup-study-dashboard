@@ -2,9 +2,17 @@ import { useAppState } from '@/app/AppStateProvider'
 import { getTodayOverview } from '@/domain/today'
 import { getTodayPriorities, getWeekPreviewItems } from '@/domain/overview'
 import { pickBestFocusWindow, getBusyIntervalsForDay, getFreeWindows } from '@/domain/schedule'
+import {
+  getNextDeadline,
+  getTodayCounts,
+  getTodayEvents,
+  getUpcomingEvents,
+} from '@/domain/schedule-overview'
 import { useTranslation } from '@/i18n'
 import { trackEvent } from '@/lib/analytics'
 import { StartHereCard } from '@/components/common/StartHereCard'
+import { NextUpCard } from '@/components/features/dashboard/NextUpCard'
+import { TodayScheduleCard } from '@/components/features/dashboard/TodayScheduleCard'
 import { TodayPrioritiesCard } from '@/components/features/home/TodayPrioritiesCard'
 import { FocusBlockCard } from '@/components/features/home/FocusBlockCard'
 import { WeekPreviewCard } from '@/components/features/home/WeekPreviewCard'
@@ -33,6 +41,23 @@ export function DashboardPage() {
     (dl) => dl.deadline >= windowStart && dl.deadline <= windowEnd
   ).length
   const windowCount = personalWindowCount + schoolWindowCount
+  const hasRosterEvents = state.personalEvents.length > 0
+  const upcomingEvents = getUpcomingEvents(state, now, 5)
+  const nextClass = upcomingEvents[0] ?? null
+  const nextDeadline = getNextDeadline(state, now)
+  const todayCounts = getTodayCounts(state, now)
+  const todayEvents = getTodayEvents(state, now, 3)
+  const hasMoreTodayEvents = todayCounts.classes > todayEvents.length
+
+  const navigateToSettingsCalendar = () => {
+    window.location.hash = '#calendar'
+    window.dispatchEvent(
+      new CustomEvent('app:navigate', { detail: { view: 'settings', focus: 'calendar' } })
+    )
+  }
+
+  const navigateToWeek = () =>
+    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
 
   if (import.meta.env.DEV) {
     console.debug('Dashboard window', {
@@ -128,6 +153,24 @@ export function DashboardPage() {
         <p className="text-sm text-muted-foreground">{t('dashboard.hero.subtitle')}</p>
       </header>
 
+      <NextUpCard
+        nextClass={nextClass}
+        nextDeadline={nextDeadline}
+        classesToday={todayCounts.classes}
+        deadlinesToday={todayCounts.deadlines}
+        hasRosterEvents={hasRosterEvents}
+        onImportRoster={navigateToSettingsCalendar}
+        onViewWeek={navigateToWeek}
+      />
+
+      <TodayScheduleCard
+        events={todayEvents}
+        hasMore={hasMoreTodayEvents}
+        hasRosterEvents={hasRosterEvents}
+        onViewWeek={navigateToWeek}
+        onImportRoster={navigateToSettingsCalendar}
+      />
+
       {hasAnyData && (
         <EliteHeader
           performanceIndex={derived.performanceIndex}
@@ -145,9 +188,7 @@ export function DashboardPage() {
             onStart={handleScheduleFocus}
             helperText={t('focusBlock.helper')}
             secondaryCta={t('focusBlock.ctaSecondary')}
-            onSecondary={() =>
-              window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
-            }
+            onSecondary={navigateToWeek}
           />
           <WeekPreviewCard
             items={weekPreview}
@@ -156,9 +197,7 @@ export function DashboardPage() {
                 ? t('calendar.outOfWindow', { count: windowCount })
                 : t('week.preview.empty')
             }
-            onViewWeek={() =>
-              window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
-            }
+            onViewWeek={navigateToWeek}
           />
         </div>
       )}
@@ -168,9 +207,7 @@ export function DashboardPage() {
           onStart={handleScheduleFocus}
           helperText={t('focusBlock.helper')}
           secondaryCta={t('focusBlock.ctaSecondary')}
-          onSecondary={() =>
-            window.dispatchEvent(new CustomEvent('app:navigate', { detail: { view: 'week' } }))
-          }
+          onSecondary={navigateToWeek}
         />
       )}
     </div>

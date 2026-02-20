@@ -9,10 +9,19 @@ describe('Dashboard - Start Here Flow', () => {
   })
 
   it('should show StartHereCard when no data is imported', () => {
+    cy.getByTestId('next-up').should('be.visible')
+    cy.getByTestId('next-class').should('be.visible')
+    cy.getByTestId('next-deadline').should('be.visible')
+    cy.getByTestId('today-events').should('be.visible')
     cy.getByTestId('start-here-card').should('be.visible')
     cy.getByTestId('start-here-import-calendar').should('be.visible')
     cy.getByTestId('start-here-import-grades').should('be.visible')
     cy.getByTestId('start-here-view-week').should('be.visible')
+  })
+
+  it('should navigate to settings when Next up import roster CTA is clicked', () => {
+    cy.getByTestId('next-up-import-roster').click()
+    cy.url().should('include', '#calendar')
   })
 
   it('should navigate to settings when Import Rooster is clicked', () => {
@@ -49,9 +58,12 @@ describe('Dashboard - Today Hero with Data', () => {
   })
 
   it('should show compact StartHereCard when data exists', () => {
-    // This test would require seeding data first
-    // For now, we'll just verify the structure exists
-    cy.get('body').should('exist')
+    cy.getByTestId('header-demo-data').click()
+    cy.getByTestId('next-up').should('be.visible')
+    cy.getByTestId('next-class').should('be.visible')
+    cy.getByTestId('next-deadline').should('be.visible')
+    cy.getByTestId('today-events').should('be.visible')
+    cy.getByTestId('next-up-view-week').should('be.visible')
   })
 
   it('should display max 3 items in Today Hero', () => {
